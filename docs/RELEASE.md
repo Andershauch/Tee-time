@@ -10,7 +10,7 @@ Når en ordre committes, oprettes der i samme Neon-transaktion én `email_outbox
 - `sandbox` — sender en valideringsrequest med Brevos `X-Sib-Sandbox: drop`; Brevo sender ingen mail og opretter ingen Brevo-mail-log.
 - `live` — sender én driftsmail til `RESTAURANT_NOTIFICATION_EMAIL` fra en verificeret `BREVO_SENDER_EMAIL`.
 
-Vercel Cron kalder hvert femte minut `/api/internal/email-retry`. Ruten kræver `CRON_SECRET`, genoptager konfigurationsblokerede poster, håndterer låse og prøver midlertidige fejl op til fem gange med stigende ventetid. Logning indeholder kun tekniske id'er og fejlkoder — aldrig token, navn, telefon, e-mail, noter eller provider-respons.
+Vercel Cron kalder `/api/internal/email-retry`. Ruten kræver `CRON_SECRET`, genoptager konfigurationsblokerede poster, håndterer låse og prøver midlertidige fejl op til fem gange med stigende ventetid. Logning indeholder kun tekniske id'er og fejlkoder — aldrig token, navn, telefon, e-mail, noter eller provider-respons. På Vercel Hobby kører den dagligt kl. 03:00 UTC; før en rigtig driftslancering skal den ændres til hvert femte minut på en plan eller jobplatform, der understøtter det.
 
 Et timeout efter Brevo kan være accepteret hos udbyderen uden at appen har modtaget svaret. Flowet er derfor **at-least-once**. Outbox-låsen minimerer dobbeltsendelser, men driftspersonalet skal kunne håndtere en sjælden dubletmail.
 
@@ -43,7 +43,7 @@ Kundeoplysninger anonymiseres automatisk senest 30 dage efter ordreoprettelsen a
 - [ ] Preview bruger `BREVO_DELIVERY_MODE=sandbox`; sandbox-request og outbox-`sent`-hændelse er verificeret.
 - [ ] Production-afsenderdomæne er verificeret i Brevo.
 - [ ] Production bruger nye, separate Neon-, Auth-, Brevo- og cron-hemmeligheder.
-- [ ] `CRON_SECRET` beskytter retry-ruten, og Vercel Cron-kørslen er observeret.
+- [ ] `CRON_SECRET` beskytter retry-ruten, og Vercel Cron-kørslen er observeret. På Hobby er den daglig; planlæg femminutters retry før drift.
 - [ ] CSP, HSTS (production), `nosniff`, frame- og permissions-policy er tjekket i preview-browseren.
 - [ ] Service worker cacher kun offline-siden og billeder; personale, admin, ordrestatus og API-svar er ikke cachet.
 - [ ] Retention- og beredskabsbeslutningen ovenfor er godkendt af den dataansvarlige.
