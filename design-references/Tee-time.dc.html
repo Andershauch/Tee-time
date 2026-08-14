@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./assets/tee-time-logo.png">
+<meta name="theme-color" content="#1E3328">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tee-Time">
+<script src="./image-slot.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
+</script>
+<style>
+*{box-sizing:border-box}
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+a{color:#1E3328}
+a:hover{color:#A9812F}
+::placeholder{color:#A79C87}
+.no-scrollbar::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#E9E2D0;font-family:'Manrope',sans-serif;color:#1C2620">
+
+<div style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 20px;background:#E9E2D0;border-bottom:1px solid #DDD3BC">
+  <img src="assets/tee-time-logo.png" alt="Tee-Time logo" style="height:38px;width:38px;object-fit:contain;mix-blend-mode:multiply;flex-shrink:0"/>
+  <div style="display:flex;gap:4px;background:#FFFFFF;padding:4px;border-radius:12px;border:1px solid #E1D6BC">
+    <sc-for list="{{ modeTabs }}" as="tab" hint-placeholder-count="3">
+      <button onClick="{{ tab.onClick }}" style="border:none;border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:600;background:{{ tab.bg }};color:{{ tab.color }}">{{ tab.label }}</button>
+    </sc-for>
+  </div>
+  <div style="width:38px;flex-shrink:0"></div>
+</div>
+
+<div style="display:flex;justify-content:center;padding:44px 20px 80px">
+
+<sc-if value="{{ isGuest }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ phoneWidth }}" height="{{ phoneHeight }}" hint-size="402,874">
+<div style="height:100%;display:flex;flex-direction:column;background:#F7F3EC;position:relative">
+<div style="flex:1;overflow-y:auto;min-height:0">
+<div style="padding:56px 20px 20px">
+
+  <div style="padding:0 0 8px;display:flex;align-items:center;gap:10px">
+    <img src="assets/tee-time-logo.png" alt="Tee-Time logo" style="height:50px;width:50px;object-fit:contain;mix-blend-mode:multiply;flex-shrink:0"/>
+    <div>
+      <div style="font-family:'Spectral',serif;font-weight:700;font-size:18px;color:#1E3328;line-height:1.15">Tee-Time</div>
+      <div style="font-size:10px;color:#8A8378;letter-spacing:0.05em;text-transform:uppercase;margin-top:2px">Roskilde Golf Restaurant</div>
+    </div>
+  </div>
+
+  <sc-if value="{{ screenIsStart }}" hint-placeholder-val="{{ true }}">
+  <div style="padding:18px 0 20px">
+    <div style="width:100%;height:150px;border-radius:18px;overflow:hidden;margin-bottom:18px">
+      <img src="assets/golf-restaurant-terrasse.jpg" alt="Terrassen ved Tee-Time" style="width:100%;height:100%;object-fit:cover;display:block"/>
+    </div>
+    <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:26px;margin:0 0 8px;color:#1E3328">Hvor er du?</h1>
+    <p style="margin:0 0 24px;color:#5B6660;font-size:14px;line-height:1.5">Så viser vi de rigtige muligheder for afhentning eller levering.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ placementOptions }}" as="opt" hint-placeholder-count="3">
+        <button onClick="{{ opt.onClick }}" style="display:flex;align-items:center;gap:14px;text-align:left;background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:16px;min-height:80px;box-shadow:0 1px 2px rgba(30,51,40,0.05)">
+          <span style="flex-shrink:0;width:44px;height:44px;border-radius:50%;background:{{ opt.badgeBg }};display:flex;align-items:center;justify-content:center">
+            <span style="width:{{ opt.markSize }};height:{{ opt.markSize }};border-radius:{{ opt.markRadius }};background:{{ opt.markColor }};border:{{ opt.markBorder }}"></span>
+          </span>
+          <span style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-weight:700;font-size:15.5px;color:#1C2620">{{ opt.label }}</span>
+            <span style="font-size:12.5px;color:#8A8378;line-height:1.4">{{ opt.helper }}</span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsMenu }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:12px 0 20px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <button onClick="{{ backToStart }}" style="border:none;background:none;padding:6px;font-size:18px;color:#1E3328">←</button>
+      <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:21px;margin:0;color:#1E3328;flex:1">Menu</h1>
+      <button onClick="{{ goToCart }}" style="position:relative;border:1px solid #EFE7D8;background:#FFFFFF;border-radius:12px;padding:9px 13px;font-size:12.5px;font-weight:600;color:#1E3328">
+        Kurv
+        <sc-if value="{{ cartCount }}" hint-placeholder-val="{{ false }}">
+          <span style="position:absolute;top:-6px;right:-6px;background:#A9812F;color:#fff;font-size:10.5px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px">{{ cartCount }}</span>
+        </sc-if>
+      </button>
+    </div>
+    <div style="display:inline-block;background:#F3EEDF;color:#6B5A32;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:8px;margin-bottom:16px">{{ placementLabel }}</div>
+
+    <div class="no-scrollbar" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;scrollbar-width:none;-ms-overflow-style:none">
+      <sc-for list="{{ categoriesList }}" as="cat" hint-placeholder-count="5">
+        <button onClick="{{ cat.onClick }}" style="flex-shrink:0;border:1px solid {{ cat.border }};background:{{ cat.bg }};color:{{ cat.color }};border-radius:999px;padding:8px 15px;font-size:13px;font-weight:600;white-space:nowrap">{{ cat.name }}</button>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ productsForCategory }}" as="p" hint-placeholder-count="4">
+        <button onClick="{{ p.onClick }}" style="display:flex;gap:13px;text-align:left;background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:13px;opacity:{{ p.cardOpacity }};position:relative">
+          <sc-if value="{{ p.soldOut }}" hint-placeholder-val="{{ false }}">
+            <span style="position:absolute;top:9px;left:9px;background:#1C2620;color:#fff;font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:6px;z-index:2">Udsolgt</span>
+          </sc-if>
+          <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0">
+            <image-slot id="product-{{ p.id }}" shape="rounded" placeholder="{{ p.name }}"></image-slot>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
+            <span style="font-weight:700;font-size:14.5px;color:#1C2620">{{ p.name }}</span>
+            <span style="font-size:12px;color:#8A8378;line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">{{ p.desc }}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:1px">
+              <sc-for list="{{ p.allergens }}" as="a" hint-placeholder-count="0">
+                <span style="background:#F3EEDF;color:#6B5A32;font-size:10px;padding:3px 7px;border-radius:6px">{{ a }}</span>
+              </sc-for>
+            </div>
+            <span style="font-weight:700;font-size:14px;color:#1E3328;margin-top:1px">{{ p.priceLabel }}</span>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsProduct }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:12px 0 10px">
+    <button onClick="{{ backToMenu }}" style="border:none;background:none;padding:6px 0;font-size:17px;color:#1E3328;margin-bottom:8px">← Menu</button>
+    <div style="width:100%;height:190px;border-radius:18px;overflow:hidden;margin-bottom:16px">
+      <image-slot id="product-{{ selectedProduct.id }}" shape="rounded" placeholder="Foto af {{ selectedProduct.name }}"></image-slot>
+    </div>
+    <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:21px;margin:0 0 6px;color:#1E3328">{{ selectedProduct.name }}</h1>
+    <div style="font-weight:700;font-size:16px;color:#1E3328;margin-bottom:8px">{{ selectedProduct.priceLabel }}</div>
+    <p style="color:#5B6660;font-size:13.5px;line-height:1.6;margin:0 0 10px">{{ selectedProduct.desc }}</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">
+      <sc-for list="{{ selectedProduct.allergens }}" as="a" hint-placeholder-count="0">
+        <span style="background:#F3EEDF;color:#6B5A32;font-size:11px;padding:4px 9px;border-radius:8px">{{ a }}</span>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ selectedProduct.hasOptions }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-bottom:18px">
+      <div style="font-weight:700;font-size:13px;color:#1C2620;margin-bottom:9px">Tilvalg</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ selectedProduct.options }}" as="o" hint-placeholder-count="2">
+          <button onClick="{{ o.onToggle }}" style="display:flex;align-items:center;justify-content:space-between;background:#FFFFFF;border:1px solid #EFE7D8;border-radius:12px;padding:12px 15px">
+            <span style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#1C2620">
+              <span style="width:19px;height:19px;border-radius:6px;border:1.5px solid {{ o.boxBorder }};background:{{ o.boxBg }};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">{{ o.checkMark }}</span>
+              {{ o.label }}
+            </span>
+            <span style="font-size:13px;color:#8A8378;font-weight:600">{{ o.priceLabel }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <div style="margin-bottom:18px">
+      <div style="font-weight:700;font-size:13px;color:#1C2620;margin-bottom:9px">Bemærkning</div>
+      <textarea value="{{ note }}" onChange="{{ onNoteChange }}" placeholder="Fx uden løg, ekstra sprød..." style="width:100%;min-height:58px;border:1px solid #EFE7D8;border-radius:12px;padding:11px 13px;font-size:13.5px;color:#1C2620;resize:vertical;background:#FFFFFF"></textarea>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:13px;color:#1C2620">Antal</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <button onClick="{{ decQty }}" style="width:40px;height:40px;border-radius:11px;border:1px solid #EFE7D8;background:#FFFFFF;font-size:18px;color:#1E3328;font-weight:700">−</button>
+        <span style="font-size:16px;font-weight:700;min-width:18px;text-align:center">{{ qty }}</span>
+        <button onClick="{{ incQty }}" style="width:40px;height:40px;border-radius:11px;border:1px solid #EFE7D8;background:#FFFFFF;font-size:18px;color:#1E3328;font-weight:700">+</button>
+      </div>
+    </div>
+
+    <div style="position:sticky;bottom:0;background:#F7F3EC;border-top:1px solid #EDE4CF;padding:12px 0;margin:0 -20px;padding-left:20px;padding-right:20px">
+      <button onClick="{{ addToCart }}" style="width:100%;min-height:54px;border:none;border-radius:14px;background:#1E3328;color:#F7F3EC;font-size:15.5px;font-weight:700">Tilføj til kurv — {{ addToCartPriceLabel }}</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsCart }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:12px 0 10px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button onClick="{{ backToMenu }}" style="border:none;background:none;padding:6px;font-size:18px;color:#1E3328">←</button>
+      <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:21px;margin:0;color:#1E3328">Din kurv</h1>
+    </div>
+
+    <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align:center;padding:50px 20px;color:#8A8378">
+        <p style="font-size:14px;margin:0 0 16px">Kurven er tom.</p>
+        <button onClick="{{ backToMenu }}" style="border:none;border-radius:12px;background:#1E3328;color:#F7F3EC;padding:11px 20px;font-size:13.5px;font-weight:700">Se menu</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ cartHasItems }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:16px">
+      <sc-for list="{{ cartLines }}" as="line" hint-placeholder-count="2">
+        <div style="background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:13px">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px;color:#1C2620">{{ line.name }}</div>
+              <sc-if value="{{ line.optionsLabel }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12px;color:#8A8378;margin-top:2px">{{ line.optionsLabel }}</div>
+              </sc-if>
+              <sc-if value="{{ line.note }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12px;color:#8A8378;font-style:italic;margin-top:2px">"{{ line.note }}"</div>
+              </sc-if>
+            </div>
+            <div style="font-weight:700;font-size:13.5px;color:#1E3328;white-space:nowrap">{{ line.lineTotalLabel }}</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <button onClick="{{ line.dec }}" style="width:34px;height:34px;border-radius:10px;border:1px solid #EFE7D8;background:#FFFFFF;font-size:15px;color:#1E3328;font-weight:700">−</button>
+              <span style="font-size:13.5px;font-weight:700;min-width:14px;text-align:center">{{ line.qty }}</span>
+              <button onClick="{{ line.inc }}" style="width:34px;height:34px;border-radius:10px;border:1px solid #EFE7D8;background:#FFFFFF;font-size:15px;color:#1E3328;font-weight:700">+</button>
+            </div>
+            <button onClick="{{ line.remove }}" style="border:none;background:none;color:#8C3B2E;font-size:12px;font-weight:600">Fjern</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #EDE4CF;font-size:15px;font-weight:700;color:#1E3328">
+      <span>Total</span>
+      <span>{{ cartTotalLabel }}</span>
+    </div>
+
+    <div style="position:sticky;bottom:0;background:#F7F3EC;border-top:1px solid #EDE4CF;padding:12px 20px;margin:0 -20px">
+      <button onClick="{{ goToCheckout }}" style="width:100%;min-height:54px;border:none;border-radius:14px;background:#1E3328;color:#F7F3EC;font-size:15.5px;font-weight:700">Gå til bestilling</button>
+    </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsCheckout }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:12px 0 10px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <button onClick="{{ backToCart }}" style="border:none;background:none;padding:6px;font-size:18px;color:#1E3328">←</button>
+      <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:21px;margin:0;color:#1E3328">Bestilling</h1>
+    </div>
+
+    <sc-if value="{{ showFulfillmentChoice }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-bottom:18px">
+      <div style="font-weight:700;font-size:13px;color:#1C2620;margin-bottom:9px">Hent selv eller få bragt til bordet?</div>
+      <div style="display:flex;gap:10px">
+        <sc-for list="{{ fulfillmentOptions }}" as="f" hint-placeholder-count="2">
+          <button onClick="{{ f.onClick }}" style="flex:1;padding:14px 8px;border-radius:14px;border:1.5px solid {{ f.border }};background:{{ f.bg }};color:{{ f.color }};font-size:13px;font-weight:700">{{ f.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ showTerraceLocation }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-bottom:18px">
+      <label style="font-weight:700;font-size:13px;color:#1C2620;display:block;margin-bottom:8px">Bord- eller områdenummer</label>
+      <input value="{{ terraceLocation }}" onChange="{{ onTerraceLocationChange }}" placeholder="Fx bord 14 eller område B" style="width:100%;padding:13px 15px;border-radius:12px;border:1px solid {{ terraceLocationBorder }};font-size:13.5px;background:#FFFFFF"/>
+      <sc-if value="{{ errors.terrace }}" hint-placeholder-val="{{ false }}"><div style="color:#8C3B2E;font-size:11.5px;margin-top:5px">Angiv bord eller område</div></sc-if>
+    </div>
+    </sc-if>
+
+    <div style="margin-bottom:18px">
+      <div style="font-weight:700;font-size:13px;color:#1C2620;margin-bottom:9px">Ønsket tidspunkt</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ timeOptions }}" as="t" hint-placeholder-count="4">
+          <button onClick="{{ t.onClick }}" style="padding:9px 14px;border-radius:999px;border:1.5px solid {{ t.border }};background:{{ t.bg }};color:{{ t.color }};font-size:13px;font-weight:700">{{ t.label }}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ showCustomTimeInput }}" hint-placeholder-val="{{ false }}">
+        <input type="time" value="{{ customTime }}" onChange="{{ onCustomTimeChange }}" style="margin-top:10px;padding:11px 13px;border-radius:12px;border:1px solid #EFE7D8;font-size:13.5px;background:#FFFFFF"/>
+      </sc-if>
+    </div>
+
+    <div style="margin-bottom:6px">
+      <label style="font-weight:700;font-size:13px;color:#1C2620;display:block;margin-bottom:8px">Navn</label>
+      <input value="{{ guestName }}" onChange="{{ onNameChange }}" placeholder="Dit navn" style="width:100%;padding:13px 15px;border-radius:12px;border:1px solid {{ nameBorder }};font-size:13.5px;background:#FFFFFF"/>
+      <sc-if value="{{ errors.name }}" hint-placeholder-val="{{ false }}"><div style="color:#8C3B2E;font-size:11.5px;margin-top:5px">Udfyld dit navn</div></sc-if>
+    </div>
+
+    <div style="margin-bottom:14px;margin-top:14px">
+      <label style="font-weight:700;font-size:13px;color:#1C2620;display:block;margin-bottom:8px">Mobilnummer{{ phoneRequiredLabel }}</label>
+      <input value="{{ guestPhone }}" onChange="{{ onPhoneChange }}" placeholder="Fx 20 30 40 50" style="width:100%;padding:13px 15px;border-radius:12px;border:1px solid {{ phoneBorder }};font-size:13.5px;background:#FFFFFF"/>
+      <sc-if value="{{ errors.phone }}" hint-placeholder-val="{{ false }}"><div style="color:#8C3B2E;font-size:11.5px;margin-top:5px">Mobilnummer skal udfyldes ved bestilling fra banen</div></sc-if>
+    </div>
+
+    <div style="background:#F3EEDF;border-radius:14px;padding:13px 15px;font-size:12px;color:#6B5A32;line-height:1.5;margin-bottom:18px">Personalet bekræfter dit tidspunkt. Du kan blive kontaktet, hvis det ønskede tidspunkt ikke kan holdes.</div>
+
+    <div style="border-top:1px solid #EDE4CF;padding-top:12px;display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#1E3328">
+      <span>Total</span><span>{{ cartTotalLabel }}</span>
+    </div>
+
+    <div style="position:sticky;bottom:0;background:#F7F3EC;border-top:1px solid #EDE4CF;padding:12px 20px;margin:0 -20px">
+      <button onClick="{{ submitCheckout }}" style="width:100%;min-height:54px;border:none;border-radius:14px;background:#1E3328;color:#F7F3EC;font-size:15.5px;font-weight:700">Bekræft bestilling</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsConfirm }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:32px 0 20px;text-align:center">
+    <div style="width:56px;height:56px;border-radius:50%;background:#1E3328;color:#F7F3EC;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 16px">✓</div>
+    <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:21px;margin:0 0 8px;color:#1E3328">Tak for din bestilling!</h1>
+    <p style="color:#8A8378;font-size:13px;margin:0 0 20px">Ordre {{ confirmedOrder.token }}</p>
+    <div style="background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:16px;text-align:left;margin-bottom:18px">
+      <sc-for list="{{ confirmedOrder.items }}" as="it" hint-placeholder-count="2">
+        <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;color:#1C2620"><span>{{ it.qty }}× {{ it.name }}</span><span>{{ it.priceLabel }}</span></div>
+      </sc-for>
+      <div style="display:flex;justify-content:space-between;font-size:14.5px;font-weight:700;color:#1E3328;border-top:1px solid #EDE4CF;margin-top:8px;padding-top:8px"><span>Total</span><span>{{ confirmedOrder.totalLabel }}</span></div>
+    </div>
+    <p style="color:#5B6660;font-size:13px;line-height:1.5;margin:0 0 22px">Ønsket tidspunkt: <strong>{{ confirmedOrder.requestedLabel }}</strong>. Vi bekræfter snarest.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onClick="{{ goToStatus }}" style="min-height:50px;border:none;border-radius:14px;background:#1E3328;color:#F7F3EC;font-size:14.5px;font-weight:700">Se status</button>
+      <button onClick="{{ orderMore }}" style="min-height:46px;border:1.5px solid #1E3328;border-radius:14px;background:none;color:#1E3328;font-size:13.5px;font-weight:700">Bestil mere</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsStatus }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:16px 0 20px">
+    <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:19px;margin:0 0 4px;color:#1E3328">Din ordre</h1>
+    <p style="color:#8A8378;font-size:12px;margin:0 0 18px">{{ statusOrder.token }}</p>
+
+    <sc-if value="{{ statusOrder.isRejectedOrCancelled }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#F3E3DE;color:#8C3B2E;border-radius:14px;padding:15px;font-size:13px;line-height:1.5;margin-bottom:18px"><strong>{{ statusOrder.statusLabel }}</strong><br/>{{ statusOrder.rejectReason }}</div>
+    </sc-if>
+
+    <sc-if value="{{ statusOrder.showStepper }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:flex-start;margin-bottom:20px">
+      <sc-for list="{{ statusOrder.steps }}" as="s" hint-placeholder-count="4">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;position:relative">
+          <div style="width:30px;height:30px;border-radius:50%;background:{{ s.circleBg }};color:{{ s.circleColor }};border:{{ s.circleBorder }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;z-index:1">{{ s.mark }}</div>
+          <span style="font-size:10px;color:{{ s.labelColor }};font-weight:600;line-height:1.3">{{ s.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ statusOrder.approvedTimeClock }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#F3EEDF;color:#6B5A32;border-radius:14px;padding:13px 15px;font-size:13.5px;margin-bottom:18px">Klar tidspunkt: <strong>{{ statusOrder.approvedTimeClock }}</strong></div>
+    </sc-if>
+
+    <div style="background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:16px;margin-bottom:18px">
+      <sc-for list="{{ statusOrder.items }}" as="it" hint-placeholder-count="2">
+        <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;color:#1C2620"><span>{{ it.qty }}× {{ it.name }}</span><span>{{ it.priceLabel }}</span></div>
+      </sc-for>
+      <div style="display:flex;justify-content:space-between;font-size:14.5px;font-weight:700;color:#1E3328;border-top:1px solid #EDE4CF;margin-top:8px;padding-top:8px"><span>Total</span><span>{{ statusOrder.totalLabel }}</span></div>
+    </div>
+
+    <p style="color:#8A8378;font-size:11.5px;line-height:1.5;margin:0 0 18px">Denne side kan altid genåbnes via dit personlige ordrelink.</p>
+    <button onClick="{{ newOrder }}" style="width:100%;min-height:50px;border:1.5px solid #1E3328;border-radius:14px;background:none;color:#1E3328;font-size:13.5px;font-weight:700">Ny bestilling</button>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsPrevious }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:16px 0 20px">
+    <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:21px;margin:0 0 4px;color:#1E3328">Tidligere bestillinger</h1>
+    <p style="color:#8A8378;font-size:12.5px;margin:0 0 18px">Tryk på en bestilling for at se detaljer og genbestille</p>
+    <sc-if value="{{ previousOrdersEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align:center;padding:50px 20px;color:#8A8378"><p style="font-size:14px;margin:0">Du har endnu ingen tidligere bestillinger.</p></div>
+    </sc-if>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ previousOrdersList }}" as="po" hint-placeholder-count="2">
+        <button onClick="{{ po.onClick }}" style="text-align:left;background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:5px">
+          <span style="font-size:12px;color:#8A8378;font-weight:600">{{ po.dateLabel }}</span>
+          <span style="font-size:13.5px;color:#1C2620">{{ po.itemsSummary }}</span>
+          <span style="font-weight:700;font-size:14px;color:#1E3328;margin-top:2px">{{ po.totalLabel }}</span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsPreviousDetail }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:12px 0 20px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button onClick="{{ backToPreviousList }}" style="border:none;background:none;padding:6px;font-size:18px;color:#1E3328">←</button>
+      <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:19px;margin:0;color:#1E3328">Bestilling</h1>
+    </div>
+    <p style="color:#8A8378;font-size:12px;margin:0 0 16px">{{ selectedPreviousOrder.dateLabel }}</p>
+    <div style="background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:16px;margin-bottom:20px">
+      <sc-for list="{{ selectedPreviousOrder.items }}" as="it" hint-placeholder-count="2">
+        <div style="padding:6px 0;border-bottom:1px solid #F3EEDF">
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;color:#1C2620"><span>{{ it.qty }}× {{ it.name }}</span><span>{{ it.priceLabel }}</span></div>
+          <sc-if value="{{ it.optionsLabel }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#8A8378;margin-top:2px">{{ it.optionsLabel }}</div></sc-if>
+        </div>
+      </sc-for>
+      <div style="display:flex;justify-content:space-between;font-size:14.5px;font-weight:700;color:#1E3328;margin-top:8px;padding-top:8px">
+        <span>Total</span><span>{{ selectedPreviousOrder.totalLabel }}</span>
+      </div>
+    </div>
+    <button onClick="{{ selectedPreviousOrder.onReorder }}" style="width:100%;min-height:52px;border:none;border-radius:14px;background:#1E3328;color:#F7F3EC;font-size:14.5px;font-weight:700">Genbestil</button>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ screenIsOffers }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:16px 0 20px">
+    <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:21px;margin:0 0 4px;color:#1E3328">Tilbud</h1>
+    <p style="color:#8A8378;font-size:12.5px;margin:0 0 18px">Aktuelle tilbud i restauranten</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ offersList }}" as="offer" hint-placeholder-count="3">
+        <div style="background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;overflow:hidden">
+          <div style="width:100%;height:220px"><image-slot id="offer-{{ offer.id }}" shape="rect" placeholder="Foto: {{ offer.title }}"></image-slot></div>
+          <div style="padding:14px 16px">
+            <div style="display:inline-block;background:#F3EEDF;color:#6B5A32;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:7px;margin-bottom:8px">{{ offer.badge }}</div>
+            <div style="font-weight:700;font-size:15px;color:#1C2620;margin-bottom:5px">{{ offer.title }}</div>
+            <p style="font-size:12.5px;color:#8A8378;line-height:1.5;margin:0 0 12px">{{ offer.desc }}</p>
+            <button onClick="{{ offer.onClick }}" style="border:1.5px solid #1E3328;background:none;color:#1E3328;border-radius:11px;padding:9px 16px;font-size:12.5px;font-weight:700">Bestil nu</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</div>
+
+  <sc-if value="{{ showBottomNav }}" hint-placeholder-val="{{ true }}">
+  <div style="flex-shrink:0;background:#F7F3EC;border-top:1px solid #EDE4CF;display:flex;padding:6px 12px 10px;position:relative;z-index:30">
+    <sc-for list="{{ bottomNavItems }}" as="nav" hint-placeholder-count="3">
+      <button onClick="{{ nav.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;padding:8px 4px">
+        <span style="width:6px;height:6px;border-radius:50%;background:{{ nav.dotColor }}"></span>
+        <span style="font-size:11px;font-weight:700;color:{{ nav.color }}">{{ nav.label }}</span>
+      </button>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ toastVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;pointer-events:none;z-index:100">
+      <div style="pointer-events:auto;background:#1C2620;color:#F7F3EC;padding:11px 20px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.25);white-space:nowrap">{{ toast }}</div>
+    </div>
+  </sc-if>
+
+</div>
+</x-import>
+</sc-if>
+
+<sc-if value="{{ isStaff }}" hint-placeholder-val="{{ false }}">
+<div style="width:1050px;max-width:92vw;aspect-ratio:4/3;background:linear-gradient(180deg,#E4E4E6,#D2D2D5);border-radius:42px;padding:16px;box-shadow:0 40px 90px rgba(0,0,0,0.28),inset 0 0 0 1px rgba(255,255,255,0.5);position:relative;border:1px solid #BEBEC1">
+  <div style="position:absolute;top:9px;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:#141416;box-shadow:inset 0 0 0 1.5px #3A3A3C"></div>
+  <div style="background:#F7F3EC;border-radius:28px;overflow:hidden;height:100%;display:flex;flex-direction:column">
+    <div style="background:#1E3328;color:#F7F3EC;padding:13px 26px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:13.5px;letter-spacing:0.02em;flex-shrink:0"><img src="assets/tee-time-logo.png" alt="" style="height:24px;width:24px;object-fit:contain;border-radius:50%;flex-shrink:0"/>Tee-time · Personale</div>
+    <div style="flex:1;overflow-y:auto;position:relative">
+    <div style="padding:26px 30px 50px">
+      <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:26px;margin:0 0 4px;color:#1E3328">Ordreoversigt</h1>
+      <p style="color:#8A8378;font-size:13px;margin:0 0 22px">Tidsstyret — nyeste behov øverst</p>
+
+      <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:30px">
+        <sc-for list="{{ activeOrders }}" as="o" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border:1px solid #EFE7D8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:11px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-family:'Spectral',serif;font-weight:700;font-size:20px;color:#1E3328">{{ o.displayClock }}</div>
+                <div style="font-size:12px;color:#8A8378;font-weight:600">{{ o.placementFulfillLabel }}</div>
+              </div>
+              <span style="background:{{ o.statusBg }};color:{{ o.statusColor }};font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px">{{ o.statusDot }} {{ o.statusLabel }}</span>
+            </div>
+            <div style="font-size:13px;color:#1C2620;line-height:1.5">
+              <strong>{{ o.name }}</strong><sc-if value="{{ o.phone }}" hint-placeholder-val="{{ false }}"> · {{ o.phone }}</sc-if><sc-if value="{{ o.location }}" hint-placeholder-val="{{ false }}"> · {{ o.location }}</sc-if>
+              <div style="color:#8A8378;margin-top:2px">{{ o.itemsSummary }}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ o.actions }}" as="act" hint-placeholder-count="2">
+                <button onClick="{{ act.onClick }}" style="padding:9px 15px;border-radius:11px;font-size:12.5px;font-weight:700;background:{{ act.bg }};color:{{ act.color }};border:{{ act.border }}">{{ act.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <h2 style="font-family:'Spectral',serif;font-weight:700;font-size:16px;margin:0 0 12px;color:#8A8378">Afsluttede &amp; afviste</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ archivedOrders }}" as="o" hint-placeholder-count="2">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#FFFFFF;border:1px solid #EFE7D8;border-radius:12px;padding:11px 15px;opacity:0.75;flex-wrap:wrap;gap:8px">
+            <div style="font-size:12.5px;color:#1C2620"><strong>{{ o.displayClock }}</strong> · {{ o.name }} · {{ o.itemsSummary }}</div>
+            <span style="background:{{ o.statusBg }};color:{{ o.statusColor }};font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px">{{ o.statusDot }} {{ o.statusLabel }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <sc-if value="{{ toastVisible }}" hint-placeholder-val="{{ false }}">
+      <div style="position:sticky;bottom:14px;height:0;display:flex;justify-content:center;pointer-events:none;z-index:100">
+        <div style="pointer-events:auto;background:#1C2620;color:#F7F3EC;padding:11px 20px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.25);white-space:nowrap">{{ toast }}</div>
+      </div>
+    </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+<div style="width:1050px;max-width:92vw;aspect-ratio:4/3;background:linear-gradient(180deg,#E4E4E6,#D2D2D5);border-radius:42px;padding:16px;box-shadow:0 40px 90px rgba(0,0,0,0.28),inset 0 0 0 1px rgba(255,255,255,0.5);position:relative;border:1px solid #BEBEC1">
+  <div style="position:absolute;top:9px;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:#141416;box-shadow:inset 0 0 0 1.5px #3A3A3C"></div>
+  <div style="background:#F7F3EC;border-radius:28px;overflow:hidden;height:100%;display:flex;flex-direction:column">
+    <div style="background:#1E3328;color:#F7F3EC;padding:13px 26px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:13.5px;letter-spacing:0.02em;flex-shrink:0"><img src="assets/tee-time-logo.png" alt="" style="height:24px;width:24px;object-fit:contain;border-radius:50%;flex-shrink:0"/>Tee-time · Menuadministration</div>
+    <div style="flex:1;overflow-y:auto">
+    <div style="padding:26px 30px 50px;max-width:820px">
+      <h1 style="font-family:'Spectral',serif;font-weight:700;font-size:26px;margin:0 0 4px;color:#1E3328">Menuadministration</h1>
+      <p style="color:#8A8378;font-size:13px;margin:0 0 22px">Priser og udsolgt-status opdateres straks i gæstens menu.</p>
+
+      <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #EDE4CF">
+        <h2 style="font-family:'Spectral',serif;font-weight:600;font-size:15px;color:#1E3328;margin:0 0 10px">Allergener</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <sc-for list="{{ allergensList }}" as="a" hint-placeholder-count="5">
+            <span style="display:flex;align-items:center;gap:6px;background:#F3EEDF;color:#6B5A32;font-size:12px;font-weight:600;padding:6px 6px 6px 12px;border-radius:999px">
+              {{ a.name }}
+              <button onClick="{{ a.onRemove }}" style="border:none;background:#E3D6B0;color:#6B5A32;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+            </span>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input value="{{ newAllergenName }}" onChange="{{ onNewAllergenNameChange }}" placeholder="Nyt allergen" style="flex:1;max-width:220px;padding:9px 12px;border-radius:10px;border:1px solid #EFE7D8;font-size:13px"/>
+          <button onClick="{{ addAllergen }}" style="border:none;border-radius:10px;background:#1E3328;color:#F7F3EC;padding:9px 16px;font-size:12.5px;font-weight:700;white-space:nowrap">Tilføj allergen</button>
+        </div>
+      </div>
+
+      <sc-for list="{{ adminGroups }}" as="group" hint-placeholder-count="5">
+        <div style="margin-bottom:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #EDE4CF;padding-bottom:8px;margin-bottom:10px">
+            <h2 style="font-family:'Spectral',serif;font-weight:600;font-size:15px;color:#1E3328;margin:0">{{ group.name }}</h2>
+            <button onClick="{{ group.onRemoveCategory }}" style="border:none;background:none;color:#8C3B2E;font-size:11.5px;font-weight:700;padding:4px 6px">Fjern kategori</button>
+          </div>
+          <sc-for list="{{ group.products }}" as="p" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid #F3EEDF;opacity:{{ p.rowOpacity }};flex-wrap:wrap">
+              <div style="flex:1;min-width:180px">
+                <div style="font-weight:700;font-size:14px;color:#1C2620;margin-bottom:6px">{{ p.name }}</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap">
+                  <sc-for list="{{ p.allergenChips }}" as="a" hint-placeholder-count="0">
+                    <button onClick="{{ a.onClick }}" style="border:1px solid {{ a.border }};background:{{ a.bg }};color:{{ a.color }};font-size:10px;font-weight:600;padding:3px 7px;border-radius:7px">{{ a.name }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <input type="number" value="{{ p.price }}" onChange="{{ p.onPriceChange }}" style="width:68px;padding:8px 7px;border-radius:9px;border:1px solid #EFE7D8;font-size:13.5px;text-align:right"/>
+                <span style="font-size:12.5px;color:#8A8378">kr.</span>
+              </div>
+              <button onClick="{{ p.onToggleSoldOut }}" style="display:flex;align-items:center;gap:8px;border:none;background:none">
+                <span style="width:42px;height:23px;border-radius:12px;background:{{ p.toggleTrackBg }};position:relative;display:inline-block">
+                  <span style="position:absolute;top:2px;left:{{ p.knobLeft }};width:19px;height:19px;border-radius:50%;background:#FFFFFF"></span>
+                </span>
+                <span style="font-size:12px;font-weight:600;color:#5B6660">Udsolgt</span>
+              </button>
+            </div>
+          </sc-for>
+          <div style="display:flex;gap:8px;align-items:center;padding-top:12px;flex-wrap:wrap">
+            <input value="{{ group.draftName }}" onChange="{{ group.onDraftNameChange }}" placeholder="Navn på nyt menupunkt" style="flex:1;min-width:180px;padding:9px 12px;border-radius:10px;border:1px solid #EFE7D8;font-size:13px"/>
+            <input type="number" value="{{ group.draftPrice }}" onChange="{{ group.onDraftPriceChange }}" placeholder="Pris" style="width:80px;padding:9px 10px;border-radius:10px;border:1px solid #EFE7D8;font-size:13px"/>
+            <button onClick="{{ group.onAddProduct }}" style="border:none;border-radius:10px;background:#1E3328;color:#F7F3EC;padding:9px 16px;font-size:12.5px;font-weight:700;white-space:nowrap">+ Tilføj menupunkt</button>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <input value="{{ newCategoryName }}" onChange="{{ onNewCategoryNameChange }}" placeholder="Ny kategori" style="flex:1;max-width:220px;padding:10px 13px;border-radius:10px;border:1px solid #EFE7D8;font-size:13.5px"/>
+        <button onClick="{{ addCategory }}" style="border:none;border-radius:10px;background:#1E3328;color:#F7F3EC;padding:10px 18px;font-size:13px;font-weight:700;white-space:nowrap">+ Tilføj kategori</button>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;orderSortNewestFirst&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Ordreoversigt&quot;}}">
+const ALLERGENS_ALL = ['Gluten','Mælk','Æg','Fisk','Skaldyr','Nødder','Sennep','Selleri'];
+
+const PRODUCTS_SEED = [
+  {id:'burger-klub', category:'Burgere', name:'Klubhusburger', price:145, desc:'120g oksebøf, bacon, cheddar, syltede agurker og husets remoulade i blødt brioche-brød.', allergens:['Gluten','Mælk','Sennep'], soldOut:false, options:[{label:'Ekstra bacon',price:15},{label:'Ekstra cheddar',price:12},{label:'Uden løg',price:0}]},
+  {id:'burger-kylling', category:'Burgere', name:'Kyllingeburger', price:139, desc:'Paneret kyllingeoverlår, chili-mayo, syltet rødkål og salat.', allergens:['Gluten','Æg','Sennep'], soldOut:false, options:[{label:'Ekstra chili-mayo',price:8}]},
+  {id:'burger-vegetar', category:'Burgere', name:'Grøntsagsburger', price:129, desc:'Sprød linsebøf, avocado, ristede løg og tomatrelish.', allergens:['Gluten','Sennep'], soldOut:false, options:null},
+  {id:'sandwich-club', category:'Sandwich & Salater', name:'Club sandwich', price:119, desc:'Ristet toast med kylling, bacon, æg, tomat og mayo.', allergens:['Gluten','Æg','Mælk'], soldOut:false, options:null},
+  {id:'salat-caesar', category:'Sandwich & Salater', name:'Cæsarsalat', price:115, desc:'Romainesalat, bacon, parmesan, croutoner og cæsardressing.', allergens:['Gluten','Mælk','Æg','Fisk'], soldOut:true, options:null},
+  {id:'fiskefrikadeller', category:'Sandwich & Salater', name:'Fiskefrikadeller', price:129, desc:'Husets fiskefrikadeller med remoulade, rugbrød og citron.', allergens:['Fisk','Gluten','Æg'], soldOut:false, options:null},
+  {id:'moerbrad', category:'Fra Grillen', name:'Grillet flæskemørbrad', price:165, desc:'Med sæsonens grillede grøntsager og bearnaisesauce.', allergens:['Mælk','Sennep'], soldOut:false, options:[{label:'Ekstra bearnaise',price:10}]},
+  {id:'dagens-fangst', category:'Fra Grillen', name:'Dagens fangst', price:175, desc:'Stegt fisk efter sæson, urtekartofler og citronsmør.', allergens:['Fisk','Mælk'], soldOut:false, options:null},
+  {id:'entrecote', category:'Fra Grillen', name:'Entrecôte 200g', price:245, desc:'Med pommes frites, salat og bearnaisesauce.', allergens:['Mælk'], soldOut:false, options:null},
+  {id:'sodavand', category:'Drikkevarer', name:'Sodavand', price:32, desc:'Coca-Cola, Coca-Cola Zero eller Sprite, 0,33L.', allergens:[], soldOut:false, options:null},
+  {id:'fadoel', category:'Drikkevarer', name:'Fadøl 0,4L', price:45, desc:'Kold pilsner på fad.', allergens:['Gluten'], soldOut:false, options:null},
+  {id:'alkoholfri', category:'Drikkevarer', name:'Alkoholfri øl', price:42, desc:'Frisk og let, 0,0%.', allergens:['Gluten'], soldOut:false, options:null},
+  {id:'kaffe', category:'Drikkevarer', name:'Kaffe', price:29, desc:'Frisk brygget kaffe fra kanden.', allergens:[], soldOut:false, options:null},
+  {id:'aeblekage', category:'Kage & Dessert', name:'Æblekage med flødeskum', price:65, desc:'Husets æblekage med kanel, rasp og flødeskum.', allergens:['Gluten','Mælk'], soldOut:false, options:null},
+  {id:'islagkage', category:'Kage & Dessert', name:'Islagkage', price:59, desc:'Klassisk islagkage med marengs og chokolade.', allergens:['Mælk','Æg','Gluten'], soldOut:false, options:null}
+];
+
+const CATEGORIES = ['Burgere','Sandwich & Salater','Fra Grillen','Drikkevarer','Kage & Dessert'];
+
+const PREVIOUS_ORDERS_SEED = [
+  {id:'prev1', dateLabel:'I går, 13:20', items:[
+    {productId:'burger-klub', name:'Klubhusburger', unitPrice:145, qty:1, options:[{label:'Ekstra bacon',price:15}], note:''},
+    {productId:'sodavand', name:'Sodavand', unitPrice:32, qty:2, options:[], note:''}
+  ]},
+  {id:'prev2', dateLabel:'For 5 dage siden, 12:05', items:[
+    {productId:'salat-caesar', name:'Cæsarsalat', unitPrice:115, qty:1, options:[], note:''},
+    {productId:'kaffe', name:'Kaffe', unitPrice:29, qty:1, options:[], note:''}
+  ]}
+];
+
+const OFFERS_SEED = [
+  {id:'lunch', title:'Ugens frokosttilbud', desc:'Vælg en burger og en sodavand for 149 kr. samlet, hverdage kl. 11-14.', badge:'Hverdage 11-14'},
+  {id:'family', title:'Familiesøndag', desc:'Børn under 12 år spiser gratis fra børnemenuen ved køb af en voksenret.', badge:'Søndage'},
+  {id:'19hul', title:'19. hul happy hour', desc:'To fadøl til prisen af én, når runden er i hus.', badge:'Kl. 16-18'}
+];
+
+const ORDERS_SEED = [
+  {id:'seed1', token:'TT-1042', placement:'bane', fulfillment:'afhentning', location:'', status:'modtaget', requestedLabel:'Hurtigst muligt', requestedClock:'14:15', approvedClock:null, sortKey:855, name:'Mikkel S.', phone:'21 22 23 24', rejectReason:'', items:[{name:'Klubhusburger',qty:1,optionsLabel:'Ekstra bacon',price:160},{name:'Sodavand',qty:1,optionsLabel:'',price:32}]},
+  {id:'seed2', token:'TT-1041', placement:'klubhus', fulfillment:'afhentning', location:'', status:'godkendt', requestedLabel:'Om ca. 30 min', requestedClock:'14:20', approvedClock:'14:20', sortKey:860, name:'Julie H.', phone:'30 40 50 60', rejectReason:'', items:[{name:'Fiskefrikadeller',qty:2,optionsLabel:'',price:258}]},
+  {id:'seed3', token:'TT-1039', placement:'terrasse', fulfillment:'levering', location:'Terrassebord 14', status:'tilberedes', requestedLabel:'Hurtigst muligt', requestedClock:'14:05', approvedClock:'14:05', sortKey:845, name:'Anders P.', phone:'', rejectReason:'', items:[{name:'Club sandwich',qty:1,optionsLabel:'',price:119},{name:'Fadøl 0,4L',qty:2,optionsLabel:'',price:90}]},
+  {id:'seed4', token:'TT-1037', placement:'terrasse', fulfillment:'afhentning', location:'Terrasseområde B', status:'klar', requestedLabel:'Om ca. 15 min', requestedClock:'13:50', approvedClock:'13:50', sortKey:830, name:'Sofie L.', phone:'', rejectReason:'', items:[{name:'Grillet flæskemørbrad',qty:1,optionsLabel:'',price:165}]},
+  {id:'seed5', token:'TT-1030', placement:'bane', fulfillment:'afhentning', location:'', status:'afsluttet', requestedLabel:'Kl. 13:30', requestedClock:'13:30', approvedClock:'13:30', sortKey:810, name:'Peter K.', phone:'12 34 56 78', rejectReason:'', items:[{name:'Kyllingeburger',qty:1,optionsLabel:'',price:139}]},
+  {id:'seed6', token:'TT-1028', placement:'terrasse', fulfillment:'levering', location:'Terrassebord 7', status:'afvist', requestedLabel:'Hurtigst muligt', requestedClock:'12:45', approvedClock:null, sortKey:765, name:'Christina M.', phone:'', rejectReason:'Køkkenet kunne desværre ikke nå dette tidspunkt.', items:[{name:'Entrecôte 200g',qty:2,optionsLabel:'',price:490}]}
+];
+
+const STATUS_META = {
+  modtaget:{label:'Modtaget', bg:'#F3EEDF', color:'#6B5A32', dot:'●'},
+  godkendt:{label:'Godkendt', bg:'#E4EDE6', color:'#1E3328', dot:'✓'},
+  tilberedes:{label:'Tilberedes', bg:'#F6E9D2', color:'#8A6A1F', dot:'⏱'},
+  klar:{label:'Klar', bg:'#DCE9DE', color:'#1E3328', dot:'✓'},
+  leveres:{label:'Leveres', bg:'#DCE9DE', color:'#1E3328', dot:'✓'},
+  afsluttet:{label:'Afsluttet', bg:'#EFECE4', color:'#8A8378', dot:'✓'},
+  afvist:{label:'Afvist', bg:'#F3E3DE', color:'#8C3B2E', dot:'✕'},
+  annulleret:{label:'Annulleret', bg:'#F0EEE9', color:'#8A8378', dot:'✕'}
+};
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function nowClock(){ const d=new Date(); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+function minutesOfDay(clock){ if(!clock) return 0; const parts=clock.split(':'); return parseInt(parts[0],10)*60+parseInt(parts[1],10); }
+function addMinutesClock(clock, delta){ let m=minutesOfDay(clock)+delta; m=((m%1440)+1440)%1440; return pad2(Math.floor(m/60))+':'+pad2(m%60); }
+function addMinutesFromNow(delta){ return addMinutesClock(nowClock(), delta); }
+function formatKr(n){ return n+' kr.'; }
+
+class Component extends DCLogic {
+  state = {
+    mode:'guest',
+    screen:'start',
+    placement:null,
+    activeCategory:'Burgere',
+    selectedProductId:null,
+    selectedOptions:{},
+    note:'',
+    qty:1,
+    cart:[],
+    cartLineSeq:1,
+    fulfillment:'afhentning',
+    timeChoice:'asap',
+    customTime:'',
+    terraceLocation:'',
+    guestName:'',
+    guestPhone:'',
+    checkoutErrors:{},
+    orders: ORDERS_SEED.slice(),
+    nextOrderNum:1043,
+    currentOrderId:null,
+    products: PRODUCTS_SEED.map(p=>Object.assign({},p)),
+    categories: CATEGORIES.slice(),
+    allergensAll: ALLERGENS_ALL.slice(),
+    newCategoryName:'',
+    newAllergenName:'',
+    newProductDrafts:{},
+    previousOrders: PREVIOUS_ORDERS_SEED.map(o=>Object.assign({},o,{items:o.items.map(i=>Object.assign({},i))})),
+    selectedPreviousOrderId:null,
+    toast:null
+  };
+
+  showToast(msg){
+    this.setState({toast:msg});
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(()=>this.setState({toast:null}), 2200);
+  }
+
+  setMode(m){ this.setState({mode:m}); }
+
+  selectPlacement(p){
+    this.setState({placement:p, screen:'menu', fulfillment: p==='terrasse' ? 'afhentning' : 'afhentning'});
+  }
+  backToStart(){ this.setState({screen:'start'}); }
+  backToMenu(){ this.setState({screen:'menu'}); }
+  backToCart(){ this.setState({screen:'cart'}); }
+  selectCategory(c){ this.setState({activeCategory:c}); }
+
+  openProduct(id){ this.setState({selectedProductId:id, selectedOptions:{}, note:'', qty:1, screen:'product'}); }
+
+  toggleOption(label){
+    this.setState(s=>({selectedOptions: Object.assign({}, s.selectedOptions, {[label]: !s.selectedOptions[label]})}));
+  }
+  incQty(){ this.setState(s=>({qty:s.qty+1})); }
+  decQty(){ this.setState(s=>({qty:Math.max(1,s.qty-1)})); }
+  onNoteChange(e){ this.setState({note:e.target.value}); }
+
+  addToCart(){
+    const product = this.state.products.find(p=>p.id===this.state.selectedProductId);
+    if(!product) return;
+    const chosenOptions = (product.options||[]).filter(o=>this.state.selectedOptions[o.label]);
+    const line = {
+      id:this.state.cartLineSeq,
+      productId:product.id,
+      name:product.name,
+      unitPrice:product.price,
+      qty:this.state.qty,
+      options:chosenOptions,
+      note:this.state.note
+    };
+    this.setState(s=>({cart:s.cart.concat([line]), cartLineSeq:s.cartLineSeq+1, screen:'menu'}));
+    this.showToast('Tilføjet til kurv');
+  }
+
+  changeCartQty(lineId, delta){
+    this.setState(s=>({cart:s.cart.map(l=> l.id===lineId ? Object.assign({},l,{qty:Math.max(1,l.qty+delta)}) : l)}));
+  }
+  removeCartLine(lineId){
+    this.setState(s=>({cart:s.cart.filter(l=>l.id!==lineId)}));
+  }
+  goToCart(){ this.setState({screen:'cart'}); }
+  goToCheckout(){ if(this.state.cart.length===0) return; this.setState({screen:'checkout', checkoutErrors:{}}); }
+
+  setFulfillment(f){ this.setState({fulfillment:f}); }
+  setTimeChoice(t){ this.setState({timeChoice:t}); }
+  onCustomTimeChange(e){ this.setState({customTime:e.target.value}); }
+  onTerraceLocationChange(e){ this.setState({terraceLocation:e.target.value, checkoutErrors:Object.assign({},this.state.checkoutErrors,{terrace:false})}); }
+  onNameChange(e){ this.setState({guestName:e.target.value, checkoutErrors:Object.assign({},this.state.checkoutErrors,{name:false})}); }
+  onPhoneChange(e){ this.setState({guestPhone:e.target.value, checkoutErrors:Object.assign({},this.state.checkoutErrors,{phone:false})}); }
+
+  submitCheckout(){
+    const s = this.state;
+    const errors = {};
+    if(!s.guestName.trim()) errors.name = true;
+    if(s.placement==='bane' && !s.guestPhone.trim()) errors.phone = true;
+    if(s.placement==='terrasse' && s.fulfillment==='levering' && !s.terraceLocation.trim()) errors.terrace = true;
+    if(s.timeChoice==='custom' && !s.customTime) errors.time = true;
+    if(Object.keys(errors).length){ this.setState({checkoutErrors:errors}); return; }
+
+    let requestedLabel, requestedClock;
+    if(s.timeChoice==='asap'){ requestedLabel='Hurtigst muligt'; requestedClock=addMinutesFromNow(10); }
+    else if(s.timeChoice==='custom'){ requestedLabel='Kl. '+s.customTime; requestedClock=s.customTime; }
+    else { const n=parseInt(s.timeChoice,10); requestedLabel='Om ca. '+n+' min'; requestedClock=addMinutesFromNow(n); }
+
+    const items = s.cart.map(l=>({
+      name:l.name,
+      qty:l.qty,
+      optionsLabel:(l.options||[]).map(o=>o.label).join(', '),
+      note:l.note,
+      price:(l.unitPrice + (l.options||[]).reduce((a,o)=>a+o.price,0)) * l.qty
+    }));
+    const total = items.reduce((a,i)=>a+i.price,0);
+    const token = 'TT-'+s.nextOrderNum;
+    const order = {
+      id:'order-'+s.nextOrderNum,
+      token, placement:s.placement,
+      fulfillment: s.placement==='terrasse' ? s.fulfillment : 'afhentning',
+      location: s.placement==='terrasse' ? s.terraceLocation : '',
+      status:'modtaget',
+      requestedLabel, requestedClock, approvedClock:null,
+      sortKey:minutesOfDay(requestedClock),
+      name:s.guestName, phone:s.guestPhone, rejectReason:'',
+      items
+    };
+    this.setState(prev=>({
+      orders: prev.orders.concat([order]),
+      nextOrderNum: prev.nextOrderNum+1,
+      currentOrderId: order.id,
+      cart:[], guestName:'', guestPhone:'', terraceLocation:'', customTime:'', timeChoice:'asap',
+      checkoutErrors:{}, screen:'confirm'
+    }));
+  }
+
+  goToStatus(){ this.setState({screen:'status'}); }
+  orderMore(){ this.setState({screen:'menu'}); }
+  newOrder(){ this.setState({screen:'start', placement:null, cart:[], currentOrderId:null}); }
+
+  goToHomeTab(){ this.setState({screen:'start'}); }
+  goToMenuTab(){ this.setState(s=>({screen: s.placement ? 'menu' : 'start'})); }
+  goToPrevious(){ this.setState({screen:'previous'}); }
+  goToOffers(){ this.setState({screen:'offers'}); }
+  openPreviousOrder(id){ this.setState({selectedPreviousOrderId:id, screen:'previousDetail'}); }
+  backToPreviousList(){ this.setState({screen:'previous'}); }
+  goToMenuFromOffer(){ this.setState(s=>({screen:'menu', placement: s.placement || 'klubhus'})); }
+
+  computeOrderTotal(order){
+    return order.items.reduce((a,it)=> a + (it.unitPrice + (it.options||[]).reduce((x,o)=>x+o.price,0)) * it.qty, 0);
+  }
+
+  reorderPrevious(id){
+    const order = this.state.previousOrders.find(o=>o.id===id);
+    if(!order) return;
+    let seq = this.state.cartLineSeq;
+    const newLines = order.items.map(it=>({id:seq++, productId:it.productId, name:it.name, unitPrice:it.unitPrice, qty:it.qty, options:(it.options||[]).slice(), note:it.note||''}));
+    this.setState(s=>({
+      cart: s.cart.concat(newLines),
+      cartLineSeq: seq,
+      placement: s.placement || 'klubhus',
+      screen:'cart'
+    }));
+    this.showToast('Bestilling tilføjet til kurv');
+  }
+
+  approveOrder(id, suggested){
+    this.setState(s=>{
+      const orders = s.orders.map(o=>{
+        if(o.id!==id) return o;
+        const clock = suggested ? addMinutesClock(o.requestedClock,10) : o.requestedClock;
+        return Object.assign({},o,{status:'godkendt', approvedClock:clock});
+      });
+      const shouldJump = id===s.currentOrderId && s.screen!=='status';
+      return shouldJump ? {orders, screen:'status', mode:'guest'} : {orders};
+    });
+    this.showToast(suggested?'Nyt tidspunkt foreslået':'Ordre godkendt');
+  }
+  rejectOrder(id){
+    this.setState(s=>({orders:s.orders.map(o=> o.id===id ? Object.assign({},o,{status:'afvist', rejectReason:'Køkkenet kunne desværre ikke nå dette tidspunkt.'}) : o)}));
+    this.showToast('Ordre afvist');
+  }
+  advanceOrder(id, newStatus){
+    this.setState(s=>({orders:s.orders.map(o=> o.id===id ? Object.assign({},o,{status:newStatus}) : o)}));
+    this.showToast('Status opdateret: '+(STATUS_META[newStatus]?STATUS_META[newStatus].label:newStatus));
+  }
+
+  setAdminPrice(id, value){
+    const v = Math.max(0, parseInt(value,10)||0);
+    this.setState(s=>({products:s.products.map(p=> p.id===id ? Object.assign({},p,{price:v}) : p)}));
+  }
+  toggleSoldOut(id){
+    this.setState(s=>({products:s.products.map(p=> p.id===id ? Object.assign({},p,{soldOut:!p.soldOut}) : p)}));
+  }
+  toggleAllergen(id, allergen){
+    this.setState(s=>({products:s.products.map(p=>{
+      if(p.id!==id) return p;
+      const has = p.allergens.includes(allergen);
+      return Object.assign({},p,{allergens: has ? p.allergens.filter(a=>a!==allergen) : p.allergens.concat([allergen])});
+    })}));
+  }
+
+  onNewCategoryNameChange(e){ this.setState({newCategoryName:e.target.value}); }
+  addCategory(){
+    const name = this.state.newCategoryName.trim();
+    if(!name) return;
+    if(this.state.categories.includes(name)){ this.showToast('Kategorien findes allerede'); return; }
+    this.setState(s=>({categories:s.categories.concat([name]), newCategoryName:''}));
+    this.showToast('Kategori tilføjet');
+  }
+  removeCategory(name){
+    this.setState(s=>{
+      const categories = s.categories.filter(c=>c!==name);
+      const activeCategory = s.activeCategory===name ? (categories[0]||null) : s.activeCategory;
+      return {categories, activeCategory};
+    });
+    this.showToast('Kategori fjernet');
+  }
+
+  onDraftNameChange(category, e){
+    this.setState(s=>({newProductDrafts:Object.assign({},s.newProductDrafts,{[category]:Object.assign({},s.newProductDrafts[category]||{name:'',price:''},{name:e.target.value})})}));
+  }
+  onDraftPriceChange(category, e){
+    this.setState(s=>({newProductDrafts:Object.assign({},s.newProductDrafts,{[category]:Object.assign({},s.newProductDrafts[category]||{name:'',price:''},{price:e.target.value})})}));
+  }
+  addProduct(category){
+    const draft = this.state.newProductDrafts[category] || {name:'',price:''};
+    const name = (draft.name||'').trim();
+    if(!name) return;
+    const price = Math.max(0, parseInt(draft.price,10)||0);
+    const id = 'custom-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6);
+    const product = {id, category, name, price, desc:'', allergens:[], soldOut:false, options:null};
+    this.setState(s=>({
+      products: s.products.concat([product]),
+      newProductDrafts: Object.assign({}, s.newProductDrafts, {[category]:{name:'',price:''}})
+    }));
+    this.showToast('Menupunkt tilføjet');
+  }
+
+  onNewAllergenNameChange(e){ this.setState({newAllergenName:e.target.value}); }
+  addAllergen(){
+    const name = this.state.newAllergenName.trim();
+    if(!name) return;
+    if(this.state.allergensAll.includes(name)){ this.showToast('Allergen findes allerede'); return; }
+    this.setState(s=>({allergensAll:s.allergensAll.concat([name]), newAllergenName:''}));
+    this.showToast('Allergen tilføjet');
+  }
+  removeAllergen(name){
+    this.setState(s=>({
+      allergensAll: s.allergensAll.filter(a=>a!==name),
+      products: s.products.map(p=> p.allergens.includes(name) ? Object.assign({},p,{allergens:p.allergens.filter(a=>a!==name)}) : p)
+    }));
+    this.showToast('Allergen fjernet');
+  }
+
+  computeLineTotal(line){
+    return (line.unitPrice + (line.options||[]).reduce((a,o)=>a+o.price,0)) * line.qty;
+  }
+
+  renderVals(){
+    const s = this.state;
+
+    const modeTabs = [
+      {key:'guest', label:'Gæst', bg: s.mode==='guest' ? '#1E3328':'transparent', color: s.mode==='guest' ? '#F7F3EC':'#5B6660', onClick:()=>this.setMode('guest')},
+      {key:'staff', label:'Personale', bg: s.mode==='staff' ? '#1E3328':'transparent', color: s.mode==='staff' ? '#F7F3EC':'#5B6660', onClick:()=>this.setMode('staff')},
+      {key:'admin', label:'Menuadmin', bg: s.mode==='admin' ? '#1E3328':'transparent', color: s.mode==='admin' ? '#F7F3EC':'#5B6660', onClick:()=>this.setMode('admin')}
+    ];
+
+    const placementOptions = [
+      {key:'bane', label:'Jeg er ude på banen', helper:'Vi gør maden klar til din ankomst', badgeBg:'#E4EDE6', markSize:'14px', markRadius:'50%', markColor:'#1E3328', markBorder:'none', onClick:()=>this.selectPlacement('bane')},
+      {key:'klubhus', label:'Jeg er ved klubhuset', helper:'Hurtig afhentning uden kø', badgeBg:'#F3EEDF', markSize:'16px', markRadius:'3px', markColor:'#A9812F', markBorder:'none', onClick:()=>this.selectPlacement('klubhus')},
+      {key:'terrasse', label:'Jeg sidder på terrassen', helper:'Bestil uden at rejse dig', badgeBg:'#F3EEDF', markSize:'16px', markRadius:'50%', markColor:'transparent', markBorder:'2.5px solid #A9812F', onClick:()=>this.selectPlacement('terrasse')}
+    ];
+
+    const placementLabels = {bane:'Ude på banen', klubhus:'Ved klubhuset', terrasse:'På terrassen'};
+
+    const categoriesList = s.categories.map(c=>({
+      name:c,
+      active:c===s.activeCategory,
+      bg: c===s.activeCategory ? '#1E3328' : '#FFFFFF',
+      color: c===s.activeCategory ? '#F7F3EC' : '#1C2620',
+      border: c===s.activeCategory ? '#1E3328' : '#EFE7D8',
+      onClick:()=>this.selectCategory(c)
+    }));
+
+    const productsForCategory = s.products.filter(p=>p.category===s.activeCategory).map(p=>({
+      id:p.id, name:p.name, desc:p.desc, allergens:p.allergens, soldOut:p.soldOut,
+      priceLabel:formatKr(p.price),
+      cardOpacity: p.soldOut ? 0.55 : 1,
+      onClick: p.soldOut ? ()=>{} : ()=>this.openProduct(p.id)
+    }));
+
+    const selectedProductRaw = s.products.find(p=>p.id===s.selectedProductId);
+    let selectedProduct = null;
+    if(selectedProductRaw){
+      const opts = (selectedProductRaw.options||[]).map(o=>({
+        label:o.label, priceLabel: o.price>0 ? ('+'+o.price+' kr.') : 'Gratis',
+        checked: !!s.selectedOptions[o.label],
+        boxBg: s.selectedOptions[o.label] ? '#1E3328' : '#FFFFFF',
+        boxBorder: s.selectedOptions[o.label] ? '#1E3328' : '#D8CBA8',
+        checkMark: s.selectedOptions[o.label] ? '✓' : '',
+        onToggle:()=>this.toggleOption(o.label)
+      }));
+      const optionsSum = opts.filter(o=>o.checked).reduce((a,o,idx)=>a+(selectedProductRaw.options[idx].price),0);
+      selectedProduct = {
+        id:selectedProductRaw.id, name:selectedProductRaw.name, desc:selectedProductRaw.desc,
+        allergens:selectedProductRaw.allergens,
+        priceLabel:formatKr(selectedProductRaw.price),
+        hasOptions: !!(selectedProductRaw.options && selectedProductRaw.options.length),
+        options: opts,
+        _unitPrice: selectedProductRaw.price,
+        _optionsSum: optionsSum
+      };
+    }
+    const addToCartPriceLabel = selectedProduct ? formatKr((selectedProduct._unitPrice+selectedProduct._optionsSum)*s.qty) : '';
+
+    const cartLines = s.cart.map(line=>({
+      id:line.id, name:line.name, qty:line.qty, note:line.note,
+      optionsLabel:(line.options||[]).map(o=>o.label).join(', '),
+      lineTotalLabel: formatKr(this.computeLineTotal(line)),
+      inc:()=>this.changeCartQty(line.id,1),
+      dec:()=>this.changeCartQty(line.id,-1),
+      remove:()=>this.removeCartLine(line.id)
+    }));
+    const cartTotal = s.cart.reduce((a,l)=>a+this.computeLineTotal(l),0);
+    const cartCount = s.cart.reduce((a,l)=>a+l.qty,0);
+
+    const fulfillmentOptions = [
+      {key:'afhentning', label:'Hent selv', active:s.fulfillment==='afhentning', onClick:()=>this.setFulfillment('afhentning')},
+      {key:'levering', label:'Få bragt til bordet', active:s.fulfillment==='levering', onClick:()=>this.setFulfillment('levering')}
+    ].map(f=>({...f, bg: f.active ? '#1E3328':'#FFFFFF', color: f.active ? '#F7F3EC':'#1C2620', border: f.active ? '#1E3328':'#EFE7D8'}));
+
+    const timeOptions = [
+      {key:'asap', label:'Hurtigst muligt'},
+      {key:'15', label:'15 min'},
+      {key:'30', label:'30 min'},
+      {key:'45', label:'45 min'},
+      {key:'custom', label:'Vælg tidspunkt'}
+    ].map(t=>({...t, active:s.timeChoice===t.key, bg: s.timeChoice===t.key ? '#1E3328':'#FFFFFF', color: s.timeChoice===t.key ? '#F7F3EC':'#1C2620', border: s.timeChoice===t.key ? '#1E3328':'#EFE7D8', onClick:()=>this.setTimeChoice(t.key)}));
+
+    const errors = s.checkoutErrors || {};
+
+    const confirmedOrderRaw = s.orders.find(o=>o.id===s.currentOrderId);
+    const confirmedOrder = confirmedOrderRaw ? {
+      token:confirmedOrderRaw.token,
+      requestedLabel:confirmedOrderRaw.requestedLabel,
+      items:confirmedOrderRaw.items.map(it=>({qty:it.qty,name:it.name,priceLabel:formatKr(it.price)})),
+      totalLabel:formatKr(confirmedOrderRaw.items.reduce((a,i)=>a+i.price,0))
+    } : {token:'',requestedLabel:'',items:[],totalLabel:''};
+
+    const statusOrderRaw = s.orders.find(o=>o.id===s.currentOrderId);
+    let statusOrder = {token:'',isRejectedOrCancelled:false,showStepper:false,steps:[],approvedTimeClock:'',items:[],totalLabel:'',statusLabel:'',rejectReason:''};
+    if(statusOrderRaw){
+      const meta = STATUS_META[statusOrderRaw.status];
+      const isRC = statusOrderRaw.status==='afvist' || statusOrderRaw.status==='annulleret';
+      const finalStep = statusOrderRaw.fulfillment==='levering' ? 'leveres' : 'klar';
+      const order4 = ['modtaget','godkendt','tilberedes',finalStep];
+      const idx = statusOrderRaw.status==='afsluttet' ? 3 : order4.indexOf(statusOrderRaw.status);
+      const stepLabels = {modtaget:'Modtaget', godkendt:'Godkendt', tilberedes:'Tilberedes', klar:'Klar til afhentning', leveres:'Leveres til dig'};
+      const steps = order4.map((key,i)=>{
+        const done = i<idx || statusOrderRaw.status==='afsluttet';
+        const current = i===idx && statusOrderRaw.status!=='afsluttet';
+        return {
+          label:stepLabels[key],
+          mark: done ? '✓' : (current ? String(i+1) : ''),
+          circleBg: done ? '#1E3328' : (current ? '#A9812F' : 'transparent'),
+          circleColor: (done||current) ? '#FFFFFF' : '#B7A97E',
+          circleBorder: (done||current) ? 'none' : '2px solid #D8CBA8',
+          labelColor: (done||current) ? '#1C2620' : '#B7A97E'
+        };
+      });
+      statusOrder = {
+        token:statusOrderRaw.token,
+        isRejectedOrCancelled:isRC,
+        showStepper:!isRC,
+        steps,
+        statusLabel: meta ? meta.label : '',
+        rejectReason: statusOrderRaw.rejectReason,
+        approvedTimeClock: (!isRC && statusOrderRaw.approvedClock) ? statusOrderRaw.approvedClock : '',
+        items: statusOrderRaw.items.map(it=>({qty:it.qty,name:it.name,priceLabel:formatKr(it.price)})),
+        totalLabel: formatKr(statusOrderRaw.items.reduce((a,i)=>a+i.price,0))
+      };
+    }
+
+    const buildActions = (o) => {
+      if(o.status==='modtaget'){
+        return [
+          {label:'Godkend til '+o.requestedClock, bg:'#1E3328', color:'#FFFFFF', border:'none', onClick:()=>this.approveOrder(o.id,false)},
+          {label:'Foreslå '+addMinutesClock(o.requestedClock,10), bg:'transparent', color:'#1E3328', border:'1.5px solid #1E3328', onClick:()=>this.approveOrder(o.id,true)},
+          {label:'Afvis', bg:'transparent', color:'#8C3B2E', border:'1.5px solid #8C3B2E', onClick:()=>this.rejectOrder(o.id)}
+        ];
+      }
+      if(o.status==='godkendt'){
+        return [{label:'Start tilberedning', bg:'#1E3328', color:'#FFFFFF', border:'none', onClick:()=>this.advanceOrder(o.id,'tilberedes')}];
+      }
+      if(o.status==='tilberedes'){
+        const next = o.fulfillment==='levering' ? 'leveres' : 'klar';
+        const label = o.fulfillment==='levering' ? 'Marker leveres' : 'Marker klar';
+        return [{label, bg:'#1E3328', color:'#FFFFFF', border:'none', onClick:()=>this.advanceOrder(o.id,next)}];
+      }
+      if(o.status==='klar' || o.status==='leveres'){
+        return [{label:'Afslut', bg:'#1E3328', color:'#FFFFFF', border:'none', onClick:()=>this.advanceOrder(o.id,'afsluttet')}];
+      }
+      return [];
+    };
+
+    const placementFulfillLabels = {bane:'Bane · Afhentning', klubhus:'Klubhus · Afhentning'};
+    const decorateOrder = (o) => {
+      const meta = STATUS_META[o.status] || {label:o.status,bg:'#EFECE4',color:'#5B6660',dot:''};
+      let pfLabel = placementFulfillLabels[o.placement];
+      if(!pfLabel){ pfLabel = 'Terrasse · ' + (o.fulfillment==='levering' ? 'Levering' : 'Afhentning'); }
+      return {
+        id:o.id, displayClock: o.approvedClock || o.requestedClock,
+        placementFulfillLabel: pfLabel,
+        statusLabel:meta.label, statusBg:meta.bg, statusColor:meta.color, statusDot:meta.dot,
+        name:o.name, phone:o.phone, location:o.location,
+        itemsSummary: o.items.map(it=>it.qty+'× '+it.name).join(', '),
+        actions: buildActions(o)
+      };
+    };
+
+    const newestFirst = this.props.orderSortNewestFirst ?? true;
+    const sortedOrders = s.orders.slice().sort((a,b)=> newestFirst ? b.sortKey-a.sortKey : a.sortKey-b.sortKey);
+    const activeOrders = sortedOrders.filter(o=>['modtaget','godkendt','tilberedes','klar','leveres'].includes(o.status)).map(decorateOrder);
+    const archivedOrders = sortedOrders.filter(o=>['afsluttet','afvist','annulleret'].includes(o.status)).map(decorateOrder);
+
+    const adminGroups = s.categories.map(cat=>{
+      const draft = s.newProductDrafts[cat] || {name:'',price:''};
+      return {
+      name:cat,
+      products: s.products.filter(p=>p.category===cat).map(p=>({
+        id:p.id, name:p.name, price:p.price, rowOpacity: p.soldOut ? 0.55 : 1,
+        allergenChips: s.allergensAll.map(a=>({
+          name:a, active:p.allergens.includes(a),
+          bg: p.allergens.includes(a) ? '#1E3328' : '#FFFFFF',
+          color: p.allergens.includes(a) ? '#FFFFFF' : '#8A8378',
+          border: p.allergens.includes(a) ? '#1E3328' : '#EFE7D8',
+          onClick:()=>this.toggleAllergen(p.id,a)
+        })),
+        onPriceChange:(e)=>this.setAdminPrice(p.id, e.target.value),
+        onToggleSoldOut:()=>this.toggleSoldOut(p.id),
+        toggleTrackBg: p.soldOut ? '#8C3B2E' : '#D8CBA8',
+        knobLeft: p.soldOut ? '22px' : '2px'
+      })),
+      draftName: draft.name, draftPrice: draft.price,
+      onDraftNameChange:(e)=>this.onDraftNameChange(cat,e),
+      onDraftPriceChange:(e)=>this.onDraftPriceChange(cat,e),
+      onAddProduct:()=>this.addProduct(cat),
+      onRemoveCategory:()=>this.removeCategory(cat)
+    };});
+
+    return {
+      mode:s.mode, isGuest:s.mode==='guest', isStaff:s.mode==='staff', isAdmin:s.mode==='admin', modeTabs,
+      phoneWidth:402, phoneHeight:874,
+      screen:s.screen,
+      screenIsStart:s.screen==='start', screenIsMenu:s.screen==='menu', screenIsProduct:s.screen==='product',
+      screenIsCart:s.screen==='cart', screenIsCheckout:s.screen==='checkout', screenIsConfirm:s.screen==='confirm', screenIsStatus:s.screen==='status',
+      screenIsPrevious:s.screen==='previous', screenIsPreviousDetail:s.screen==='previousDetail', screenIsOffers:s.screen==='offers',
+      placementOptions, placementLabel: placementLabels[s.placement] || '',
+      backToStart:()=>this.backToStart(), backToMenu:()=>this.backToMenu(), backToCart:()=>this.backToCart(),
+      goToCart:()=>this.goToCart(), goToCheckout:()=>this.goToCheckout(),
+      categoriesList, productsForCategory, cartCount, cartTotalLabel:formatKr(cartTotal),
+      cartEmpty: s.cart.length===0, cartHasItems: s.cart.length>0, cartLines,
+      selectedProduct, addToCartPriceLabel, note:s.note, qty:s.qty,
+      onNoteChange:(e)=>this.onNoteChange(e), incQty:()=>this.incQty(), decQty:()=>this.decQty(), addToCart:()=>this.addToCart(),
+      showFulfillmentChoice: s.placement==='terrasse', fulfillmentOptions,
+      showTerraceLocation: s.placement==='terrasse' && s.fulfillment==='levering',
+      terraceLocation:s.terraceLocation, onTerraceLocationChange:(e)=>this.onTerraceLocationChange(e),
+      terraceLocationBorder: errors.terrace ? '#8C3B2E' : '#EFE7D8',
+      timeOptions, showCustomTimeInput: s.timeChoice==='custom', customTime:s.customTime, onCustomTimeChange:(e)=>this.onCustomTimeChange(e),
+      guestName:s.guestName, onNameChange:(e)=>this.onNameChange(e), nameBorder: errors.name ? '#8C3B2E' : '#EFE7D8',
+      guestPhone:s.guestPhone, onPhoneChange:(e)=>this.onPhoneChange(e), phoneBorder: errors.phone ? '#8C3B2E' : '#EFE7D8',
+      phoneRequiredLabel: s.placement==='bane' ? ' *' : ' (valgfrit)',
+      errors, submitCheckout:()=>this.submitCheckout(),
+      confirmedOrder, goToStatus:()=>this.goToStatus(), orderMore:()=>this.orderMore(),
+      statusOrder, newOrder:()=>this.newOrder(),
+      activeOrders, archivedOrders,
+      adminGroups,
+      allergensList: s.allergensAll.map(a=>({name:a, onRemove:()=>this.removeAllergen(a)})),
+      newCategoryName: s.newCategoryName, onNewCategoryNameChange:(e)=>this.onNewCategoryNameChange(e), addCategory:()=>this.addCategory(),
+      newAllergenName: s.newAllergenName, onNewAllergenNameChange:(e)=>this.onNewAllergenNameChange(e), addAllergen:()=>this.addAllergen(),
+
+      previousOrdersEmpty: s.previousOrders.length===0,
+      previousOrdersList: s.previousOrders.map(o=>({
+        id:o.id, dateLabel:o.dateLabel,
+        itemsSummary:o.items.map(it=>it.qty+'× '+it.name).join(', '),
+        totalLabel: formatKr(this.computeOrderTotal(o)),
+        onClick:()=>this.openPreviousOrder(o.id)
+      })),
+      selectedPreviousOrder: (()=>{
+        const raw = s.previousOrders.find(o=>o.id===s.selectedPreviousOrderId);
+        if(!raw) return {dateLabel:'', items:[], totalLabel:'', onReorder:()=>{}};
+        return {
+          dateLabel: raw.dateLabel,
+          items: raw.items.map(it=>({
+            name:it.name, qty:it.qty,
+            optionsLabel:(it.options||[]).map(o=>o.label).join(', '),
+            priceLabel: formatKr((it.unitPrice + (it.options||[]).reduce((a,o)=>a+o.price,0)) * it.qty)
+          })),
+          totalLabel: formatKr(this.computeOrderTotal(raw)),
+          onReorder:()=>this.reorderPrevious(raw.id)
+        };
+      })(),
+      backToPreviousList:()=>this.backToPreviousList(),
+
+      offersList: OFFERS_SEED.map(o=>({...o, onClick:()=>this.goToMenuFromOffer()})),
+
+      showBottomNav: ['start','menu','previous','previousDetail','offers','status'].includes(s.screen),
+      bottomNavItems: (()=>{
+        const previousScreens = ['previous','previousDetail'];
+        const menuScreens = ['menu','product','cart','checkout','confirm'];
+        let activeTab = 'home';
+        if(previousScreens.includes(s.screen)) activeTab = 'previous';
+        else if(s.screen==='offers') activeTab = 'offers';
+        else if(menuScreens.includes(s.screen)) activeTab = 'menu';
+        return [
+          {key:'home', label:'Hjem', active:activeTab==='home', onClick:()=>this.goToHomeTab()},
+          {key:'menu', label:'Menu', active:activeTab==='menu', onClick:()=>this.goToMenuTab()},
+          {key:'previous', label:'Tidligere', active:activeTab==='previous', onClick:()=>this.goToPrevious()},
+          {key:'offers', label:'Tilbud', active:activeTab==='offers', onClick:()=>this.goToOffers()}
+        ].map(n=>({...n, color: n.active ? '#1E3328' : '#8A8378', dotColor: n.active ? '#A9812F' : 'transparent'}));
+      })(),
+
+      toast:s.toast, toastVisible: !!s.toast
+    };
+  }
+}
+
+</script>
+</body>
+</html>

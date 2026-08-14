@@ -1,0 +1,15 @@
+{
+  "name": "Tee-Time – Roskilde Golf Restaurant",
+  "short_name": "Tee-Time",
+  "description": "Bestil mad og drikke fra Tee-Time restauranten på Roskilde Golfklub.",
+  "start_url": "./Tee-time.dc.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E9E2D0",
+  "theme_color": "#1E3328",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "./assets/tee-time-logo.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/tee-time-logo.png", "sizes": "1024x1024", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,22 @@
+# Dependencies and generated output
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+
+certificates
