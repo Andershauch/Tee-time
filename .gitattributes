@@ -1,0 +1,37 @@
+# Keep source files normalised in Git regardless of local Windows defaults.
+* text=auto eol=lf
+
+# Text file types present in this repo
+*.ts text eol=lf
+*.tsx text eol=lf
+*.jsx text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.sql text eol=lf
+*.html text eol=lf
+
+# Binary assets. Declared explicitly rather than left to git's content
+# sniffing, because eol normalisation would silently corrupt them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.zip binary
+*.pdf binary
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.opus binary
+
+# Webfonts. eol normalisation would corrupt a font file, so never
+# let content sniffing decide.
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
