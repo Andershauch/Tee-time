@@ -28,14 +28,15 @@ test("creates and reopens a real guest order", async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 
-  await page.getByRole("radio", { name: /Jeg er ved klubhuset/ }).click();
-  await page.getByRole("link", { name: "Se menuen" }).click();
+  await page.getByRole("link", { name: "Bestil" }).click();
   await page.getByRole("link", { name: /Klubhusburger/ }).click();
   await page.getByRole("button", { name: /Læg i kurv/ }).click();
   await page.getByRole("link", { name: /Kurv med 1 varer/ }).click();
   await page.getByRole("link", { name: "Fortsæt til bestilling" }).click();
-  await page.getByRole("radio", { name: "30 minutter" }).click();
+  const timeOptions = await page.locator("select").first().locator("option").allTextContents();
+  await page.locator("select").first().selectOption(timeOptions[1]);
   await page.getByLabel("Navn").fill("Testgæst");
+  await page.getByLabel("Mobilnummer").fill("12345678");
   await page.getByRole("button", { name: "Send ordre til restauranten" }).click();
 
   await expect(page.getByRole("heading", { name: "Din ordre er modtaget" })).toBeVisible();
