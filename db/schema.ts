@@ -86,6 +86,8 @@ export const offers = pgTable("offers", {
   description: text("description").notNull().default(""),
   badge: text("badge").notNull().default(""),
   imagePath: text("image_path").notNull(),
+  priceOre: integer("price_ore"),
+  isSoldOut: boolean("is_sold_out").notNull().default(false),
   startsAt: timestamp("starts_at", { withTimezone: true }),
   endsAt: timestamp("ends_at", { withTimezone: true }),
   isActive: boolean("is_active").notNull().default(true),
@@ -95,6 +97,7 @@ export const offers = pgTable("offers", {
 }, (table) => [
   index("offers_active_schedule_sort_idx").on(table.isActive, table.startsAt, table.endsAt, table.sortOrder),
   check("offers_sort_order_non_negative", sql`${table.sortOrder} >= 0`),
+  check("offers_price_ore_non_negative", sql`${table.priceOre} IS NULL OR ${table.priceOre} >= 0`),
   check("offers_valid_schedule", sql`${table.endsAt} IS NULL OR ${table.startsAt} IS NULL OR ${table.endsAt} > ${table.startsAt}`),
 ]);
 
@@ -225,6 +228,39 @@ export const emailOutbox = pgTable("email_outbox", {
   check("email_outbox_attempts_non_negative", sql`${table.attempts} >= 0`),
 ]);
 
+export const printOutbox = pgTable("print_outbox", {
+  id: text("id").primaryKey(),
+  orderId: text("order_id").notNull().references(() => orders.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  ticketType: text("ticket_type").notNull(),
+  idempotencyKey: text("idempotency_key").notNull(),
+  status: text("status").notNull().default("pending"),
+  printerTarget: text("printer_target"),
+  providerJobId: text("provider_job_id"),
+  attempts: integer("attempts").notNull().default(0),
+  nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }),
+  lockedAt: timestamp("locked_at", { withTimezone: true }),
+  lastErrorCode: text("last_error_code"),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("print_outbox_idempotency_unique").on(table.idempotencyKey),
+  index("print_outbox_delivery_idx").on(table.status, table.nextAttemptAt, table.createdAt),
+  index("print_outbox_order_idx").on(table.orderId),
+  check("print_outbox_type_valid", sql`${table.ticketType} IN ('kitchen_ticket')`),
+  check("print_outbox_status_valid", sql`${table.status} IN ('pending', 'processing', 'sent', 'failed', 'blocked')`),
+  check("print_outbox_attempts_non_negative", sql`${table.attempts} >= 0`),
+]);
+
+export const restaurantSettings = pgTable("restaurant_settings", {
+  id: text("id").primaryKey().default("default"),
+  opensAt: text("opens_at").notNull().default("10:00"),
+  closesAt: text("closes_at").notNull().default("21:00"),
+  ...timestamps,
+}, (table) => [
+  check("restaurant_settings_opens_at_format", sql`${table.opensAt} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'`),
+  check("restaurant_settings_closes_at_format", sql`${table.closesAt} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'`),
+  check("restaurant_settings_hours_valid", sql`${table.closesAt} > ${table.opensAt}`),
+]);
+
 export const requestRateLimits = pgTable("request_rate_limits", {
   key: text("key").primaryKey(),
   windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull(),
@@ -243,8 +279,9 @@ export const productOptionsRelations = relations(productOptions, ({ one }) => ({
 export const guestSessionsRelations = relations(guestSessions, ({ many }) => ({ orders: many(orders) }));
 export const staffProfilesRelations = relations(staffProfiles, ({ many }) => ({ statusEvents: many(orderStatusEvents) }));
 export const staffSessionsRelations = relations(staffSessions, ({ one }) => ({ profile: one(staffProfiles, { fields: [staffSessions.authUserId], references: [staffProfiles.authUserId] }) }));
-export const ordersRelations = relations(orders, ({ one, many }) => ({ guestSession: one(guestSessions, { fields: [orders.guestSessionId], references: [guestSessions.id] }), items: many(orderItems), statusEvents: many(orderStatusEvents), emails: many(emailOutbox) }));
+export const ordersRelations = relations(orders, ({ one, many }) => ({ guestSession: one(guestSessions, { fields: [orders.guestSessionId], references: [guestSessions.id] }), items: many(orderItems), statusEvents: many(orderStatusEvents), emails: many(emailOutbox), prints: many(printOutbox) }));
 export const orderItemsRelations = relations(orderItems, ({ one, many }) => ({ order: one(orders, { fields: [orderItems.orderId], references: [orders.id] }), options: many(orderItemOptions) }));
 export const orderItemOptionsRelations = relations(orderItemOptions, ({ one }) => ({ orderItem: one(orderItems, { fields: [orderItemOptions.orderItemId], references: [orderItems.id] }) }));
 export const orderStatusEventsRelations = relations(orderStatusEvents, ({ one }) => ({ order: one(orders, { fields: [orderStatusEvents.orderId], references: [orders.id] }), actor: one(staffProfiles, { fields: [orderStatusEvents.actorUserId], references: [staffProfiles.authUserId] }) }));
 export const emailOutboxRelations = relations(emailOutbox, ({ one }) => ({ order: one(orders, { fields: [emailOutbox.orderId], references: [orders.id] }) }));
+export const printOutboxRelations = relations(printOutbox, ({ one }) => ({ order: one(orders, { fields: [printOutbox.orderId], references: [orders.id] }) }));
