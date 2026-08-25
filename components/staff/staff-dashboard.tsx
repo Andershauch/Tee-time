@@ -4,19 +4,12 @@
 import { useEffect, useState } from "react";
 import type { StaffOrder } from "@/lib/staff-orders";
 import { formatPrice } from "@/lib/format";
+import { timeOfDayToDate, useTimeSlots, type RestaurantHours } from "@/lib/time-slots";
 
 const statusLabels = { received: "Modtaget", approved: "Godkendt", rejected: "Afvist", preparing: "Tilberedes", ready: "Klar", delivering: "Leveres", completed: "Afsluttet" } as const;
-type NextStatus = Exclude<keyof typeof statusLabels, "received">;
+type NextStatus = "approved" | "rejected";
 
-function actionsFor(order: StaffOrder) {
-  if (order.status === "received") return [["approved", "Godkend"], ["rejected", "Afvis"]] as const;
-  if (order.status === "approved") return [["preparing", "Start tilberedning"]] as const;
-  if (order.status === "preparing") return [[order.placement === "terrasse" ? "delivering" : "ready", order.placement === "terrasse" ? "Send ud" : "Klar til afhentning"]] as const;
-  if (order.status === "ready" || order.status === "delivering") return [["completed", "Afslut ordre"]] as const;
-  return [] as const;
-}
-
-export function StaffDashboard({ initialOrders, displayName, role }: { initialOrders: StaffOrder[]; displayName: string; role: "staff" | "admin" }) {
+export function StaffDashboard({ initialOrders, hours, displayName, role }: { initialOrders: StaffOrder[]; hours: RestaurantHours; displayName: string; role: "staff" | "admin" }) {
   const [orders, setOrders] = useState(initialOrders);
   const [scope, setScope] = useState<"active" | "archived">("active");
   const [message, setMessage] = useState("");
@@ -35,11 +28,12 @@ export function StaffDashboard({ initialOrders, displayName, role }: { initialOr
 
   async function changeStatus(order: StaffOrder, status: NextStatus) {
     setMessage("");
+    const proposedTime = proposedTimes[order.id];
     const response = await fetch(`/api/staff/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
-      body: JSON.stringify({ expectedVersion: order.version, status, approvedFor: status === "approved" && proposedTimes[order.id] ? new Date(proposedTimes[order.id]).toISOString() : undefined }),
+      body: JSON.stringify({ expectedVersion: order.version, status, approvedFor: status === "approved" && proposedTime ? timeOfDayToDate(proposedTime).toISOString() : undefined }),
     });
     if (!response.ok) {
       setMessage((await response.json().catch(() => undefined))?.error ?? "Ordren kunne ikke opdateres.");
@@ -62,14 +56,19 @@ export function StaffDashboard({ initialOrders, displayName, role }: { initialOr
     <p className="sr-only" aria-live="polite">{message}</p>
     {message && <p className="office-message" role="alert">{message}</p>}
     <section className="staff-grid">
-      {orders.length === 0 ? <p className="empty-office">Ingen {scope === "active" ? "aktive" : "arkiverede"} ordrer.</p> : orders.map((order) => <article className="staff-order-card" key={order.id}>
-        <header><span className={`status-badge ${order.status}`}>{statusLabels[order.status]}</span><strong>{order.orderNumber}</strong><time dateTime={order.requestedFor}>{new Intl.DateTimeFormat("da-DK", { hour: "2-digit", minute: "2-digit" }).format(new Date(order.approvedFor ?? order.requestedFor))}</time></header>
-        <h2>{order.customerName}</h2>
-        <p>{order.placement}{order.locationDetail ? ` · ${order.locationDetail}` : ""}{order.phone ? ` · ${order.phone}` : ""}</p>
-        <ul>{order.items.map((item) => <li key={item.id}>{item.quantity}× {item.name}{item.options.length ? ` · ${item.options.join(", ")}` : ""}{item.note ? ` — ${item.note}` : ""}</li>)}</ul>
-        {order.status === "received" && <label className="staff-time">Foreslå tidspunkt (valgfrit)<input type="datetime-local" value={proposedTimes[order.id] ?? ""} onChange={(event) => setProposedTimes((current) => ({ ...current, [order.id]: event.target.value }))} /></label>}
-        <footer><strong>{formatPrice(order.totalOre / 100)}</strong><div>{actionsFor(order).map(([status, label]) => <button className={status === "rejected" ? "office-danger" : "office-action"} key={status} type="button" onClick={() => void changeStatus(order, status)}>{label}</button>)}</div></footer>
-      </article>)}
+      {orders.length === 0 ? <p className="empty-office">Ingen {scope === "active" ? "aktive" : "arkiverede"} ordrer.</p> : orders.map((order) => <StaffOrderCard key={order.id} order={order} hours={hours} proposedTime={proposedTimes[order.id] ?? ""} onProposedTimeChange={(value) => setProposedTimes((current) => ({ ...current, [order.id]: value }))} onChangeStatus={(status) => void changeStatus(order, status)} />)}
     </section>
   </main>;
+}
+
+function StaffOrderCard({ order, hours, proposedTime, onProposedTimeChange, onChangeStatus }: { order: StaffOrder; hours: RestaurantHours; proposedTime: string; onProposedTimeChange: (value: string) => void; onChangeStatus: (status: NextStatus) => void }) {
+  const { slots } = useTimeSlots(hours);
+  return <article className="staff-order-card">
+    <header><span className={`status-badge ${order.status}`}>{statusLabels[order.status]}</span><strong>{order.orderNumber}</strong><time dateTime={order.requestedFor}>{new Intl.DateTimeFormat("da-DK", { hour: "2-digit", minute: "2-digit" }).format(new Date(order.approvedFor ?? order.requestedFor))}</time></header>
+    <h2>{order.customerName}</h2>
+    <p>{order.placement}{order.locationDetail ? ` · ${order.locationDetail}` : ""}{order.phone ? ` · ${order.phone}` : ""}</p>
+    <ul>{order.items.map((item) => <li key={item.id}>{item.quantity}× {item.name}{item.options.length ? ` · ${item.options.join(", ")}` : ""}{item.note ? ` — ${item.note}` : ""}</li>)}</ul>
+    {order.status === "received" && <label className="staff-time">Foreslå tidspunkt (valgfrit, ellers ønsket tidspunkt)<select value={proposedTime} onChange={(event) => onProposedTimeChange(event.target.value)}><option value="">Ønsket tidspunkt</option>{slots.map((slot) => <option key={slot} value={slot}>{slot}</option>)}</select></label>}
+    <footer><strong>{formatPrice(order.totalOre / 100)}</strong>{order.status === "received" && <div><button className="office-action" type="button" onClick={() => onChangeStatus("approved")}>Accepter</button><button className="office-danger" type="button" onClick={() => { if (window.confirm("Er du sikker på, du vil afvise denne ordre?")) onChangeStatus("rejected"); }}>Afvis</button></div>}</footer>
+  </article>;
 }
