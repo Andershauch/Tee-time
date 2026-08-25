@@ -36,6 +36,12 @@ Mangler `DATABASE_URL`, bruger appen bevidst fase-1 fixtures for at holde design
 
 Seedet opserter kun `seed_source = 'phase-2-menu'`. Når en seedet kategori, vare, tilvalg, allergen eller tilbud ikke længere findes i `db/seed-data.ts`, deaktiveres den i stedet for at blive slettet. Produkt-allergen-links deaktiveres tilsvarende. Administrativt oprettede rækker skal ikke bruge denne seed source.
 
+## Nye tabeller siden fase 2 (2026-08-25)
+
+- `restaurant_settings` — én række med åbnings-/lukketid (`opens_at`, `closes_at` som `"HH:mm"`), redigeres i menuadmin. Læses uden `DATABASE_URL` som `defaultRestaurantHours` (10:00–21:00).
+- `print_outbox` — spejler `email_outbox`-mønsteret for køkkenboner; se [Arkitektur](ARCHITECTURE.md#køkkenbon-udskrivning).
+- `offers` har fået `price_ore` (nullable) og `is_sold_out`. Et tilbud med en pris får automatisk en spejlet, styret række i `products` med id-præfikset `offer-product-` under en auto-oprettet kategori `category-tilbud` — se `lib/admin-catalog.ts::syncOfferProduct`. Disse rækker skal ikke redigeres manuelt; de følger tilbuddets egne felter og deaktiveres, når tilbuddets pris fjernes eller tilbuddet selv deaktiveres.
+
 ## Kontroller før produktion
 
 - Kontroller at `price_ore` og `price_delta_ore` altid er heltal.

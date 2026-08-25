@@ -1,10 +1,10 @@
 # Tee-Time
 
-En dansk, mobil-først bestillingsapp til golfklubbens restaurant. Gæster bestiller til bane, klubhus eller terrasse; personalet godkender og behandler derefter ordren.
+En dansk, mobil-først bestillingsapp til golfklubbens restaurant. Gæster bestiller banebestilling til afhentning i baren; personalet accepterer og køkkenet får besked.
 
 ## Status
 
-Fase 0–5 er etableret: menu og tilbud læses fra en ikke-produktions Neon-branch, gæster kan oprette rigtige, servervaliderede ordrer med personlige statuslinks, og personale/admin kan behandle ordrer og administrere menuen fra beskyttede tablet-ruter. Fase 5 tilføjer en transaktionel Brevo-outbox med retry, konservativ PWA-offlineadfærd, sikkerhedsheaders og release-dokumentation. En produktionspilot afventer stadig en godkendt retentionpolitik og de rigtige produktionsmiljøvariabler.
+Fase 0–5 er etableret: menu og tilbud læses fra en ikke-produktions Neon-branch, gæster kan oprette rigtige, servervaliderede ordrer med personlige statuslinks, og personale/admin kan behandle ordrer og administrere hele menuen (inkl. billeder, tilvalg og tilbud) fra beskyttede tablet-ruter. Fase 5 tilføjer en transaktionel Brevo-outbox med retry, konservativ PWA-offlineadfærd, sikkerhedsheaders og release-dokumentation. Personaleflowet er forenklet til Accepter/Afvis, og en køkkenbon-outbox (`print_outbox`) er klar til en fysisk printer, når én er valgt — se [Arkitektur](docs/ARCHITECTURE.md). En produktionspilot afventer stadig en godkendt retentionpolitik og de rigtige produktionsmiljøvariabler.
 
 ## Lokal start
 

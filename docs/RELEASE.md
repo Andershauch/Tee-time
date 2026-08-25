@@ -65,3 +65,6 @@ Disse punkter er bevidst udsat, mens byggearbejdet fortsætter. De skal lukkes o
 - [ ] Udfør en rigtig Brevo-sandboxtest i Preview med verificeret afsender. Bekræft at outbox går til `sent` uden at sende en rigtig mail.
 - [ ] Verificér SPF/DKIM og endelig afsenderdomæne, før `BREVO_DELIVERY_MODE=live` aktiveres.
 - [ ] Aftal driftsprocedure for den sjældne dubletmail, som kan opstå ved provider-timeout efter accepteret levering.
+- [ ] Vælg og tilslut en fysisk køkkenprinter (`KITCHEN_PRINTER_URL`); indtil da forbliver boner `blocked` i `print_outbox`. Samme cron-begrænsning som mail-retry gælder: daglig på Hobby, skal ændres til hvert femte minut før drift.
+- [ ] Tilslut en **public** Vercel Blob-butik til Production- og Preview-miljøerne for produkt-/tilbudsbilleder (`BLOB_STORE_ID` er pt. kun sat op til Development). Se `.env.example` for OIDC-opsætningen.
+- [ ] Fjern eller rotér `ADMIN_DEMO_EMAIL`/`ADMIN_DEMO_PASSWORD` (den let huskelige demo-admin-konto) før produktionslancering.
