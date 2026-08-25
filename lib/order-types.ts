@@ -17,6 +17,7 @@ export type OrderView = {
   status: OrderStatus;
   totalOre: number;
   requestedFor: string;
+  approvedFor?: string;
   createdAt: string;
   items: OrderLineView[];
 };

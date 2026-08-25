@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import { getTransactionalDb } from "@/db/transactional";
 import { orderItemOptions, orderItems, orders, orderStatusEvents } from "@/db/schema";
 import type { OrderStatus } from "@/lib/order-types";
+import { queueKitchenTicket } from "@/lib/kitchen-printer";
 
 export type StaffOrder = {
   id: string;
@@ -22,7 +23,8 @@ export type StaffOrder = {
   items: Array<{ id: string; name: string; quantity: number; note: string; options: string[] }>;
 };
 
-const activeStatuses: OrderStatus[] = ["received", "approved", "preparing", "ready", "delivering"];
+const activeStatuses: OrderStatus[] = ["received", "approved"];
+const archivedStatuses: OrderStatus[] = ["rejected", "completed", "preparing", "ready", "delivering"];
 
 function formatOrderNumber(value: number) { return `TT-${String(value).padStart(4, "0")}`; }
 
@@ -57,18 +59,22 @@ async function toStaffOrders(rows: Array<typeof orders.$inferSelect>): Promise<S
 
 export async function getStaffOrders(scope: "active" | "archived" = "active") {
   const rows = await getDb().select().from(orders)
-    .where(scope === "active" ? inArray(orders.status, activeStatuses) : inArray(orders.status, ["rejected", "completed"]))
+    .where(scope === "active" ? inArray(orders.status, activeStatuses) : inArray(orders.status, archivedStatuses))
     .orderBy(scope === "active" ? asc(orders.requestedFor) : desc(orders.updatedAt));
   return toStaffOrders(rows);
 }
 
+// Accepting an order is now the only staff action: "approved" is a terminal, good-path
+// status (the guest is told a pickup time and there is nothing further to click).
+// preparing/ready/delivering/completed are vestiges of an earlier multi-step flow — kept
+// in the enum for any pre-existing rows, but nothing can transition into or out of them.
 const transitions: Record<OrderStatus, OrderStatus[]> = {
   received: ["approved", "rejected"],
-  approved: ["preparing"],
+  approved: [],
   rejected: [],
-  preparing: ["ready", "delivering"],
-  ready: ["completed"],
-  delivering: ["completed"],
+  preparing: [],
+  ready: [],
+  delivering: [],
   completed: [],
 };
 
@@ -81,8 +87,6 @@ export async function updateOrderStatus(input: { orderId: string; expectedVersio
     const [current] = await tx.select().from(orders).where(eq(orders.id, input.orderId)).for("update");
     if (!current || current.version !== input.expectedVersion) throw new StatusConflictError("Ordren er allerede ændret på en anden tablet.");
     if (!transitions[current.status as OrderStatus].includes(input.status)) throw new IllegalStatusTransitionError("Dette statusskift er ikke tilladt.");
-    if (current.status === "preparing" && current.placement === "terrasse" && input.status !== "delivering") throw new IllegalStatusTransitionError("Terrasseordrer skal leveres.");
-    if (current.status === "preparing" && current.placement !== "terrasse" && input.status !== "ready") throw new IllegalStatusTransitionError("Denne ordre skal markeres klar til afhentning.");
     if (input.approvedFor && (input.status !== "approved" || Number.isNaN(input.approvedFor.valueOf()) || input.approvedFor <= new Date())) throw new InvalidApprovedTimeError("Det foreslåede tidspunkt skal ligge frem i tiden.");
     const [updated] = await tx.update(orders).set({
       status: input.status,
@@ -92,6 +96,7 @@ export async function updateOrderStatus(input: { orderId: string; expectedVersio
     }).where(and(eq(orders.id, input.orderId), eq(orders.version, input.expectedVersion))).returning();
     if (!updated) throw new StatusConflictError("Ordren er allerede ændret på en anden tablet.");
     await tx.insert(orderStatusEvents).values({ id: crypto.randomUUID(), orderId: current.id, fromStatus: current.status, toStatus: input.status, actorUserId: input.actorUserId });
-    return updated;
+    const printOutboxId = input.status === "approved" ? await queueKitchenTicket(tx, current.id) : undefined;
+    return { order: updated, printOutboxId };
   });
 }

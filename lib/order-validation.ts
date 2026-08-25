@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPhone } from "@/lib/phone";
 
 const lineSchema = z.object({
   productId: z.string().min(1).max(120),
@@ -11,9 +12,9 @@ export const orderRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
   placement: z.enum(["bane", "klubhus", "terrasse"]),
   locationDetail: z.string().trim().max(100).optional().default(""),
-  requestedMinutes: z.union([z.literal(15), z.literal(30), z.literal(45)]),
+  requestedMinutes: z.number().int().min(20).max(1440),
   customerName: z.string().trim().min(2).max(80),
-  phone: z.string().trim().max(32).refine((value) => value === "" || value.length >= 6, "Mobilnummeret er for kort.").optional().default(""),
+  phone: z.string().trim().max(32).refine((value) => value === "" || isValidPhone(value), "Mobilnummeret er ikke gyldigt.").optional().default(""),
   lines: z.array(lineSchema).min(1).max(30),
 }).superRefine((value, context) => {
   if (value.placement === "terrasse" && !value.locationDetail) {

@@ -1,5 +1,7 @@
 export type Placement = "bane" | "klubhus" | "terrasse";
 
+export const defaultRestaurantHours = { opensAt: "10:00", closesAt: "21:00" };
+
 export type ProductOption = {
   label: string;
   price: number;
@@ -49,7 +51,18 @@ export const placementCopy: Record<Placement, { title: string; description: stri
   terrasse: { title: "Jeg sidder på terrassen", description: "Bestil uden at rejse dig" },
 };
 
-export const offers = [
+export type Offer = {
+  id: string;
+  title: string;
+  badge: string;
+  description: string;
+  imagePath?: string;
+  price?: number;
+  soldOut?: boolean;
+  orderSlug?: string;
+};
+
+export const offers: Offer[] = [
   { id: "lunch", title: "Ugens frokosttilbud", badge: "Hverdage", description: "En let frokost med god tid til næste runde." },
   { id: "family", title: "Familiesøndag", badge: "Søndag", description: "Noget for både store og små efter en dag i klubben." },
   { id: "19hul", title: "19. hul happy hour", badge: "Kl. 15–17", description: "Afslut runden med kolde drikke på terrassen." },

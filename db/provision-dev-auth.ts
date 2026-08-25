@@ -9,6 +9,8 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const accounts = [
   { email: process.env.TEST_STAFF_EMAIL, password: process.env.TEST_STAFF_PASSWORD, name: "Testpersonale", role: "staff" as const },
   { email: process.env.TEST_ADMIN_EMAIL, password: process.env.TEST_ADMIN_PASSWORD, name: "Testadministrator", role: "admin" as const },
+  // Easy-to-type login for demoing before real staff accounts exist. Remove before go-live.
+  ...(process.env.ADMIN_DEMO_EMAIL && process.env.ADMIN_DEMO_PASSWORD ? [{ email: process.env.ADMIN_DEMO_EMAIL, password: process.env.ADMIN_DEMO_PASSWORD, name: "Admin", role: "admin" as const }] : []),
 ];
 if (!baseUrl || !appUrl || accounts.some((account) => !account.email || !account.password)) throw new Error("Local Neon Auth test credentials are required.");
 

@@ -8,6 +8,7 @@ import { categories, emailOutbox, guestSessions, orderItemOptions, orderItems, o
 import type { OrderRequest } from "@/lib/order-validation";
 import type { OrderStatus, OrderView } from "@/lib/order-types";
 import { configuredBrevoRecipient, getBrevoDeliveryMode } from "@/lib/brevo-config";
+import { getRestaurantHours, isWithinOpeningHours } from "@/lib/restaurant-settings";
 
 const sessionLifetimeDays = 30;
 
@@ -50,6 +51,7 @@ function toOrderView(order: typeof orders.$inferSelect, items: Array<typeof orde
     status: order.status as OrderStatus,
     totalOre: order.totalOre,
     requestedFor: order.requestedFor.toISOString(),
+    approvedFor: order.approvedFor?.toISOString(),
     createdAt: order.createdAt.toISOString(),
     items: items.map((item) => ({ id: item.id, productName: item.productNameSnapshot, unitPriceOre: item.unitPriceOreSnapshot, quantity: item.quantity, note: item.note, options: optionsByItem.get(item.id) ?? [] })),
   };
@@ -69,6 +71,8 @@ export async function createOrder(input: OrderRequest, sessionId: string) {
   const publicToken = newSecret();
   const publicTokenHash = hashSecret(publicToken);
   const requestedFor = new Date(Date.now() + input.requestedMinutes * 60 * 1000);
+  const hours = await getRestaurantHours();
+  if (!isWithinOpeningHours(hours, requestedFor)) throw new OrderValidationError(`Det valgte tidspunkt ligger uden for åbningstiden (${hours.opensAt}–${hours.closesAt}).`);
 
   const result = await getTransactionalDb().transaction(async (tx) => {
     const activeProducts = await tx.select().from(products).where(and(inArray(products.slug, productSlugs), eq(products.isActive, true))).for("update");

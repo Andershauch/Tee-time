@@ -1,10 +1,11 @@
 import "server-only";
 
 import { and, eq, inArray, isNull, lt, notExists, sql } from "drizzle-orm";
-import { emailOutbox, guestSessions, orderItems, orderStatusEvents, orders, requestRateLimits, staffSessions } from "@/db/schema";
+import { emailOutbox, guestSessions, orderItems, orderStatusEvents, orders, printOutbox, requestRateLimits, staffSessions } from "@/db/schema";
 import { getDb } from "@/db/client";
 import { getTransactionalDb } from "@/db/transactional";
 import { pruneOperationalRecords } from "@/lib/email-outbox";
+import { pruneOperationalPrintRecords } from "@/lib/kitchen-printer";
 
 const customerDataRetentionDays = 30;
 
@@ -22,6 +23,7 @@ export async function anonymizeExpiredCustomerData(limit = 200) {
       tx.update(orderItems).set({ note: "" }).where(inArray(orderItems.orderId, ids)),
       tx.update(orderStatusEvents).set({ reason: null }).where(inArray(orderStatusEvents.orderId, ids)),
       tx.update(emailOutbox).set({ recipient: null, updatedAt: now }).where(inArray(emailOutbox.orderId, ids)),
+      tx.update(printOutbox).set({ printerTarget: null, updatedAt: now }).where(inArray(printOutbox.orderId, ids)),
       tx.update(orders).set({
         guestSessionId: null,
         customerName: "Anonymiseret",
@@ -34,6 +36,8 @@ export async function anonymizeExpiredCustomerData(limit = 200) {
     ]);
     await tx.update(emailOutbox).set({ status: "blocked", nextAttemptAt: null, lockedAt: null, lastErrorCode: "retention_expired", updatedAt: now })
       .where(and(inArray(emailOutbox.orderId, ids), inArray(emailOutbox.status, ["pending", "failed", "processing"])));
+    await tx.update(printOutbox).set({ status: "blocked", nextAttemptAt: null, lockedAt: null, lastErrorCode: "retention_expired", updatedAt: now })
+      .where(and(inArray(printOutbox.orderId, ids), inArray(printOutbox.status, ["pending", "failed", "processing"])));
     return ids.length;
   });
 }
@@ -45,6 +49,7 @@ export async function runOperationalMaintenance() {
     getDb().delete(requestRateLimits).where(lt(requestRateLimits.updatedAt, new Date(now - 24 * 60 * 60_000))),
     getDb().delete(staffSessions).where(lt(staffSessions.expiresAt, new Date(now - 7 * 24 * 60 * 60_000))),
     pruneOperationalRecords(),
+    pruneOperationalPrintRecords(),
   ]);
   const anonymized = await anonymizeExpiredCustomerData();
   await getDb().delete(guestSessions).where(and(lt(guestSessions.expiresAt, new Date(now)), notExists(getDb().select({ id: orders.id }).from(orders).where(eq(orders.guestSessionId, guestSessions.id)))));
