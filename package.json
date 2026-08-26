@@ -20,6 +20,7 @@
     "db:seed": "tsx db/seed.ts",
     "db:provision-dev-auth": "tsx db/provision-dev-auth.ts",
     "db:revoke-staff-sessions": "tsx db/revoke-staff-sessions.ts",
+    "db:invite-staff": "tsx db/invite-staff.ts",
     "test:db": "tsx db/verify.ts"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "next": "^16.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "resend": "^4.0.1",
     "ws": "^8.21.3",
     "zod": "^4.4.3"
   },
