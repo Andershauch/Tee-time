@@ -11,13 +11,17 @@ Rollen kommer aldrig fra browseren. En session er en tilfældig, `HttpOnly`, `Sa
 
 ## Individuelle konti
 
-Hver medarbejder har sin egen Neon Auth-konto og sin egen `staff_profiles`-række — der er ikke længere kun én delt konto pr. rolle. En ny konto oprettes med:
+Hver medarbejder har sin egen Neon Auth-konto og sin egen `staff_profiles`-række — der er ikke længere kun én delt konto pr. rolle.
+
+**Almindelig vej (ingen terminal nødvendig):** En admin logger ind og går til `/menuadmin/personale` ("Inviter medarbejder" i menuadmin-headeren), udfylder navn, mail og rolle, og trykker "Send invitation". `app/api/admin/invite-staff/route.ts` gør præcis det samme som CLI-scriptet nedenfor, men kører på serveren (som allerede har normal netadgang til Neon), så ingen udenfor selve appen skal involveres.
+
+**CLI-alternativ (til fejlfinding eller scripting):**
 
 ```bash
 npm run db:invite-staff -- person@example.com "Fulde Navn" staff
 ```
 
-(`admin` i stedet for `staff` for menuadgang.) Scriptet (`db/invite-staff.ts`) opretter Neon Auth-kontoen med en lang, tilfældig adgangskode som ingen ser eller bruger, opdaterer `staff_profiles`, og beder derefter Neon Auth sende en nulstillings-mail med det samme — personens første handling er selv at vælge sin adgangskode via mailen. `ADMIN_DEMO_EMAIL`/`ADMIN_DEMO_PASSWORD` er stadig kun til gennemgang før drift og bør fjernes, når rigtige individuelle konti er på plads.
+(`admin` i stedet for `staff` for menuadgang.) Begge veje: opretter Neon Auth-kontoen med en lang, tilfældig adgangskode som ingen ser eller bruger, opdaterer `staff_profiles`, og beder derefter Neon Auth sende en nulstillings-mail med det samme — personens første handling er selv at vælge sin adgangskode via mailen. `ADMIN_DEMO_EMAIL`/`ADMIN_DEMO_PASSWORD` er stadig kun til gennemgang før drift og bør fjernes, når rigtige individuelle konti er på plads.
 
 ## Mail til login og adgangskode (Resend)
 

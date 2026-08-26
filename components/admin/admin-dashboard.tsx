@@ -121,6 +121,7 @@ export function AdminDashboard({ catalog: initialCatalog, hours, displayName }: 
     <header className="menuadmin-header">
       <span className="menuadmin-brand"><Image src="/images/tee-time-logo.png" alt="" width={24} height={24} /><span>Tee-time · Menuadministration</span></span>
       <a href="/personale">Personale</a>
+      <a href="/menuadmin/personale">Inviter medarbejder</a>
     </header>
     <div className="menuadmin-page">
       <h1>Menuadministration</h1>

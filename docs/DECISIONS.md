@@ -21,6 +21,8 @@
 | 2026-08-26 | `db/invite-staff.ts` og glemt-adgangskode-routen kaldte fejlagtigt `/forget-password`; det korrekte endpoint er `/request-password-reset` (bekræftet mod Neons egen SDK-dokumentation for `auth.requestPasswordReset`). | Besluttet | Fundet ved en reel test (404). Rettet begge steder; ingen andre kald bruger det forkerte navn. |
 | 2026-08-26 | `db/invite-staff.ts` sendte `redirectTo` som appens forside i stedet for `/auth/nulstil-adgangskode`. | Besluttet | Fundet ved en reel test (mail-linket endte på forsiden i stedet for password-siden). Rettet; `app/api/auth/forgot-password/route.ts` havde allerede den korrekte sti. |
 
+| 2026-08-26 | Der er tilføjet en admin-side (`/menuadmin/personale`) til at invitere medarbejdere, som gør det samme som `db:invite-staff` men via browseren i stedet for en terminal. | Besluttet | CLI-scriptet findes stadig som alternativ. Valgt fordi ejeren ikke selv er udvikler og skal kunne oprette konti uden hjælp. |
+
 ## Åbne beslutninger før database- og driftsfaser
 
 - Præcis restaurantadresse, afsenderdomæne og Brevo-konfiguration.
