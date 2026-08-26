@@ -18,9 +18,10 @@
 | 2026-08-25 | En midlertidig, let huskelig admin-demo-konto er tilføjet til gennemgang før drift. | Besluttet | `ADMIN_DEMO_EMAIL`/`ADMIN_DEMO_PASSWORD` giver adgang til både personale og menuadmin. Skal fjernes eller roteres før produktionslancering. |
 | 2026-08-26 | Personale- og adminkonti går fra én delt konto pr. rolle til individuelle Neon Auth-konti pr. medarbejder, oprettet via `npm run db:invite-staff`. | Besluttet | Løser det tidligere åbne spørgsmål om delt kontoadministration. `staff_profiles` understøttede allerede individuelle rækker; det manglende var en måde at oprette dem på. `ADMIN_DEMO_EMAIL`/`ADMIN_DEMO_PASSWORD` er stadig til overs og bør udfases, når rigtige konti findes for alle brugere. |
 | 2026-08-26 | Login-, verifikations- og nulstillingsmails for medarbejdere sendes via Resend (`mail.hansendjurhuus.dk`) gennem et Neon Auth-webhook, i stedet for Neon Autts standardskabeloner. | Besluttet | Adskilt fra Brevo, som fortsat udelukkende er restaurantens ordre-driftskanal — to udbydere, to formål. Webhooket skal registreres én gang pr. miljø, se `docs/AUTH.md`. |
+| 2026-08-26 | `db/invite-staff.ts` og glemt-adgangskode-routen kaldte fejlagtigt `/forget-password`; det korrekte endpoint er `/request-password-reset` (bekræftet mod Neons egen SDK-dokumentation for `auth.requestPasswordReset`). | Besluttet | Fundet ved en reel test (404). Rettet begge steder; ingen andre kald bruger det forkerte navn. |
+| 2026-08-26 | `db/invite-staff.ts` sendte `redirectTo` som appens forside i stedet for `/auth/nulstil-adgangskode`. | Besluttet | Fundet ved en reel test (mail-linket endte på forsiden i stedet for password-siden). Rettet; `app/api/auth/forgot-password/route.ts` havde allerede den korrekte sti. |
 
 ## Åbne beslutninger før database- og driftsfaser
 
 - Præcis restaurantadresse, afsenderdomæne og Brevo-konfiguration.
 - Endelig billedstrategi, når demoassets udskiftes.
-- Verificér `db/invite-staff.ts`'s `/forget-password`-kald (feltnavnet `redirectTo`) mod den faktiske Neon Auth-instans — dokumentationen beskriver ikke det rå HTTP-kontraktnavn, kun klient-SDK'ets metode.

@@ -44,15 +44,13 @@ if (!authUserId) throw new Error("Neon Auth account was not found after creation
 await getDb().insert(staffProfiles).values({ authUserId, displayName: name, role, isActive: true })
   .onConflictDoUpdate({ target: staffProfiles.authUserId, set: { displayName: name, role, isActive: true, updatedAt: sql`now()` } });
 
-// Mirrors better-auth's email/password "forget password" endpoint. Field
-// names (`redirectTo`) follow better-auth's documented client method
-// (authClient.forgetPassword); double check against your Neon Auth
-// dashboard/docs if this 400s, since Neon's own docs don't spell out the
-// raw HTTP contract for this specific call.
-const reset = await fetch(`${baseUrl}/forget-password`, {
+// Mirrors Neon's client SDK method auth.requestPasswordReset({ email, redirectTo }),
+// confirmed against Neon's own docs (reference/javascript-sdk.md). The raw
+// HTTP path is the kebab-case form of that method name.
+const reset = await fetch(`${baseUrl}/request-password-reset`, {
   method: "POST",
   headers: { "Content-Type": "application/json", Origin: appUrl },
-  body: JSON.stringify({ email, redirectTo: appUrl }),
+  body: JSON.stringify({ email, redirectTo: `${appUrl}/auth/nulstil-adgangskode` }),
 });
 if (!reset.ok) throw new Error(`Account was created, but the password-reset email could not be requested (${reset.status}). Ask them to use "Glemt adgangskode" on the sign-in page instead.`);
 

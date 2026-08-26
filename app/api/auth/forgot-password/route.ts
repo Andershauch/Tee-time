@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!authUrl || !appUrl) throw new Error("Neon Auth environment is not configured.");
 
-  await fetch(`${authUrl}/forget-password`, {
+  await fetch(`${authUrl}/request-password-reset`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: appUrl },
     body: JSON.stringify({ email: parsed.data.email, redirectTo: `${appUrl}/auth/nulstil-adgangskode` }),
