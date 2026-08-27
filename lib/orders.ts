@@ -184,6 +184,19 @@ export async function getOrderForSession(token: string, sessionId: string) {
   return order ? loadOrder(order) : undefined;
 }
 
+export async function getOrdersByPublicTokens(tokens: string[]) {
+  if (!tokens.length) return new Map<string, OrderView>();
+  const hashToToken = new Map(tokens.map((token) => [hashSecret(token), token]));
+  const rows = await getDb().select().from(orders).where(and(inArray(orders.publicTokenHash, [...hashToToken.keys()]), isNull(orders.anonymizedAt)));
+  const views = await loadOrders(rows);
+  const byToken = new Map<string, OrderView>();
+  rows.forEach((row, index) => {
+    const token = hashToToken.get(row.publicTokenHash);
+    if (token) byToken.set(token, views[index]!);
+  });
+  return byToken;
+}
+
 export async function prepareReorder(token: string, sessionId: string) {
   const [order] = await getDb().select().from(orders).where(and(eq(orders.publicTokenHash, hashSecret(token)), eq(orders.guestSessionId, sessionId))).limit(1);
   if (!order) return undefined;
