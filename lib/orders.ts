@@ -57,13 +57,25 @@ function toOrderView(order: typeof orders.$inferSelect, items: Array<typeof orde
   };
 }
 
-async function loadOrder(order: typeof orders.$inferSelect) {
+async function loadOrders(rows: Array<typeof orders.$inferSelect>) {
+  if (!rows.length) return [];
   const db = getDb();
+  const orderIds = rows.map((order) => order.id);
   const [items, options] = await Promise.all([
-    db.select().from(orderItems).where(eq(orderItems.orderId, order.id)).orderBy(asc(orderItems.createdAt)),
-    db.select().from(orderItemOptions).innerJoin(orderItems, eq(orderItemOptions.orderItemId, orderItems.id)).where(eq(orderItems.orderId, order.id)).orderBy(asc(orderItemOptions.createdAt)),
+    db.select().from(orderItems).where(inArray(orderItems.orderId, orderIds)).orderBy(asc(orderItems.createdAt)),
+    db.select().from(orderItemOptions).innerJoin(orderItems, eq(orderItemOptions.orderItemId, orderItems.id)).where(inArray(orderItems.orderId, orderIds)).orderBy(asc(orderItemOptions.createdAt)),
   ]);
-  return toOrderView(order, items, options.map(({ order_item_options }) => order_item_options));
+  const itemsByOrder = new Map<string, typeof items>();
+  for (const item of items) itemsByOrder.set(item.orderId, [...(itemsByOrder.get(item.orderId) ?? []), item]);
+  const optionsByOrder = new Map<string, Array<typeof orderItemOptions.$inferSelect>>();
+  for (const { order_item_options: option, order_items: item } of options) {
+    optionsByOrder.set(item.orderId, [...(optionsByOrder.get(item.orderId) ?? []), option]);
+  }
+  return rows.map((order) => toOrderView(order, itemsByOrder.get(order.id) ?? [], optionsByOrder.get(order.id) ?? []));
+}
+
+async function loadOrder(order: typeof orders.$inferSelect) {
+  return (await loadOrders([order]))[0]!;
 }
 
 export async function createOrder(input: OrderRequest, sessionId: string) {
@@ -107,11 +119,23 @@ export async function createOrder(input: OrderRequest, sessionId: string) {
 
     if (!created) return { duplicate: true as const };
 
-    for (const calculated of calculatedLines) {
-      const item = { id: randomUUID(), orderId: created.id, productId: calculated.product.id, productNameSnapshot: calculated.product.name, unitPriceOreSnapshot: calculated.product.priceOre, quantity: calculated.line.quantity, note: calculated.line.note };
-      await tx.insert(orderItems).values(item);
-      if (calculated.selectedOptions.length) await tx.insert(orderItemOptions).values(calculated.selectedOptions.map((option) => ({ id: randomUUID(), orderItemId: item.id, optionNameSnapshot: option.name, priceDeltaOreSnapshot: option.priceDeltaOre })));
-    }
+    const itemValues = calculatedLines.map((calculated) => ({
+      id: randomUUID(),
+      orderId: created.id,
+      productId: calculated.product.id,
+      productNameSnapshot: calculated.product.name,
+      unitPriceOreSnapshot: calculated.product.priceOre,
+      quantity: calculated.line.quantity,
+      note: calculated.line.note,
+    }));
+    await tx.insert(orderItems).values(itemValues);
+    const optionValues = calculatedLines.flatMap((calculated, index) => calculated.selectedOptions.map((option) => ({
+      id: randomUUID(),
+      orderItemId: itemValues[index]!.id,
+      optionNameSnapshot: option.name,
+      priceDeltaOreSnapshot: option.priceDeltaOre,
+    })));
+    if (optionValues.length) await tx.insert(orderItemOptions).values(optionValues);
     await tx.insert(orderStatusEvents).values({ id: randomUUID(), orderId: created.id, toStatus: "received" });
     const recipient = configuredBrevoRecipient(getBrevoDeliveryMode());
     const outboxId = randomUUID();
@@ -133,13 +157,26 @@ export async function createOrder(input: OrderRequest, sessionId: string) {
 }
 
 export async function getOrderByPublicToken(token: string) {
-  const [order] = await getDb().select().from(orders).where(and(eq(orders.publicTokenHash, hashSecret(token)), isNull(orders.anonymizedAt))).limit(1);
-  return order ? loadOrder(order) : undefined;
+  const rows = await getDb().select({ order: orders, item: orderItems, option: orderItemOptions })
+    .from(orders)
+    .leftJoin(orderItems, eq(orderItems.orderId, orders.id))
+    .leftJoin(orderItemOptions, eq(orderItemOptions.orderItemId, orderItems.id))
+    .where(and(eq(orders.publicTokenHash, hashSecret(token)), isNull(orders.anonymizedAt)))
+    .orderBy(asc(orderItems.createdAt), asc(orderItemOptions.createdAt));
+  const order = rows[0]?.order;
+  if (!order) return undefined;
+  const itemById = new Map<string, typeof orderItems.$inferSelect>();
+  const options: Array<typeof orderItemOptions.$inferSelect> = [];
+  for (const row of rows) {
+    if (row.item) itemById.set(row.item.id, row.item);
+    if (row.option) options.push(row.option);
+  }
+  return toOrderView(order, [...itemById.values()], options);
 }
 
 export async function getOrdersForSession(sessionId: string) {
-  const rows = await getDb().select().from(orders).where(eq(orders.guestSessionId, sessionId)).orderBy(desc(orders.createdAt));
-  return Promise.all(rows.map(loadOrder));
+  const rows = await getDb().select().from(orders).where(eq(orders.guestSessionId, sessionId)).orderBy(desc(orders.createdAt)).limit(20);
+  return loadOrders(rows);
 }
 
 export async function getOrderForSession(token: string, sessionId: string) {

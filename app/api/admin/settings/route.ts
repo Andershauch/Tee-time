@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { AuthenticationRequiredError, AuthorizationError, requireStaff } from "@/lib/auth/access";
 import { updateRestaurantHours } from "@/lib/restaurant-settings";
@@ -15,6 +16,7 @@ export async function PATCH(request: Request) {
     const parsed = schema.safeParse(await request.json().catch(() => undefined));
     if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Ugyldige åbningstider." }, { status: 400 });
     await updateRestaurantHours(parsed.data);
+    revalidateTag("guest-menu", { expire: 0 });
     return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return NextResponse.json({ error: "Log ind for at fortsætte." }, { status: 401 });

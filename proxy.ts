@@ -7,7 +7,7 @@ export function proxy(request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""}`,
     `style-src 'self'${development ? " 'unsafe-inline'" : ` 'nonce-${nonce}'`}`,
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
     "font-src 'self'",
     "connect-src 'self'",
     "base-uri 'self'",
@@ -25,7 +25,10 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [{
-    source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    // The strict nonce policy is reserved for authenticated back-office HTML.
+    // Public pages use the static CSP from next.config.ts so they remain eligible
+    // for prerendering and CDN caching.
+    source: "/(personale|menuadmin|auth)(.*)",
     missing: [
       { type: "header", key: "next-router-prefetch" },
       { type: "header", key: "purpose", value: "prefetch" },

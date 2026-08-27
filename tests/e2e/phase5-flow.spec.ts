@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { neon } from "@neondatabase/serverless";
+import { testOrigin, testRequestedMinutes } from "./test-config";
 
 test("guest order, staff approval, guest status and outbox form one auditable flow", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "tablet-chromium", "One shared database flow is sufficient.");
   const created = await page.request.post("/api/orders", {
-    headers: { Origin: "http://localhost:3000" },
+    headers: { Origin: testOrigin },
     data: {
-      idempotencyKey: crypto.randomUUID(), placement: "klubhus", requestedMinutes: 30, locationDetail: "", customerName: "Fase fem test", phone: "",
+      idempotencyKey: crypto.randomUUID(), placement: "klubhus", requestedMinutes: testRequestedMinutes(), locationDetail: "", customerName: "Fase fem test", phone: "",
       lines: [{ productId: "burger-klub", quantity: 1, options: [], note: "" }],
     },
   });
@@ -14,7 +15,7 @@ test("guest order, staff approval, guest status and outbox form one auditable fl
   const guestOrder = await created.json() as { token: string; orderNumber: string };
 
   const login = await page.request.post("/api/staff/session", {
-    headers: { Origin: "http://localhost:3000" },
+    headers: { Origin: testOrigin },
     data: { email: process.env.TEST_STAFF_EMAIL, password: process.env.TEST_STAFF_PASSWORD },
   });
   expect(login.status()).toBe(200);
@@ -22,7 +23,7 @@ test("guest order, staff approval, guest status and outbox form one auditable fl
   const staffOrder = (await staffOrders.json() as { orders: Array<{ id: string; orderNumber: string; version: number }> }).orders.find((order) => order.orderNumber === guestOrder.orderNumber);
   expect(staffOrder).toBeTruthy();
   const approval = await page.request.patch(`/api/staff/orders/${staffOrder!.id}`, {
-    headers: { Origin: "http://localhost:3000" }, data: { expectedVersion: staffOrder!.version, status: "approved" },
+    headers: { Origin: testOrigin }, data: { expectedVersion: staffOrder!.version, status: "approved" },
   });
   expect(approval.status()).toBe(200);
 

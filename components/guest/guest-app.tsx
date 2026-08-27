@@ -5,18 +5,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { categories as fixtureCategories, defaultRestaurantHours, Offer, offers as fixtureOffers, Product, products as fixtureProducts } from "@/lib/fixtures";
+import type { Offer, Product } from "@/lib/fixtures";
 import { formatPrice } from "@/lib/format";
 import { isValidPhone } from "@/lib/phone";
-import { minLeadMinutes, timeOfDayToDate, useTimeSlots, type RestaurantHours } from "@/lib/time-slots";
+import { minLeadMinutes, minutesUntilTimeOfDay, useTimeSlots, type RestaurantHours } from "@/lib/time-slots";
 import type { OrderView } from "@/lib/order-types";
 
 type CartLine = { productId: string; quantity: number; options: string[]; note: string };
 type View = "home" | "menu" | "product" | "cart" | "checkout" | "confirmation" | "status" | "previous" | "previous-detail" | "offers";
-type GuestMenuData = { categories: readonly string[]; products: Product[]; offers: Offer[]; hours: RestaurantHours };
+type GuestMenuData = { categories?: readonly string[]; products?: Product[]; offers?: Offer[]; hours?: RestaurantHours };
+
+const emptyMenuData: Required<GuestMenuData> = { categories: [], products: [], offers: [], hours: { opensAt: "10:00", closesAt: "21:00" } };
 
 const storageKey = "tee-time-cart-v1";
 const orderTokensKey = "tee-time-order-tokens-v1";
+const tokenPattern = /^[A-Za-z0-9_-]{32,}$/;
 
 type CheckoutFieldErrors = { customerName?: string; phone?: string; requestedTime?: string };
 
@@ -26,19 +29,42 @@ function resolveImagePath(imagePath: string | undefined, derivedPath: string) {
   return imagePath ?? derivedPath;
 }
 
+function readStoredCart() {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(storageKey) ?? "[]");
+    if (!Array.isArray(value)) return [];
+    return value.filter((line): line is CartLine => Boolean(
+      line && typeof line === "object"
+      && typeof line.productId === "string"
+      && Number.isInteger(line.quantity) && line.quantity > 0 && line.quantity <= 20
+      && Array.isArray(line.options) && line.options.every((option: unknown) => typeof option === "string")
+      && typeof line.note === "string",
+    ));
+  } catch { return []; }
+}
+
+function readStoredOrderTokens() {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(orderTokensKey) ?? "[]");
+    return Array.isArray(value) ? value.filter((token): token is string => typeof token === "string" && tokenPattern.test(token)).slice(0, 20) : [];
+  } catch { return []; }
+}
+
+function writeStorage(key: string, value: unknown) {
+  try { window.localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }
+}
+
 export function GuestApp({ view, productId, menuData }: { view: View; productId?: string; menuData?: GuestMenuData }) {
-  const data = menuData ?? { categories: fixtureCategories, products: fixtureProducts, offers: fixtureOffers, hours: defaultRestaurantHours };
+  const data: Required<GuestMenuData> = { ...emptyMenuData, ...menuData };
   const [cart, setCart] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
-    try {
-      setCart(JSON.parse(window.localStorage.getItem(storageKey) ?? "[]") as CartLine[]);
-    } catch { setCart([]); }
+    setCart(readStoredCart());
     setReady(true);
   }, []);
-  useEffect(() => { if (ready) window.localStorage.setItem(storageKey, JSON.stringify(cart)); }, [cart, ready]);
+  useEffect(() => { if (ready) writeStorage(storageKey, cart); }, [cart, ready]);
 
   const detailedCart = useMemo(() => cart.flatMap((line) => {
     const product = data.products.find((item) => item.id === line.productId);
@@ -47,7 +73,7 @@ export function GuestApp({ view, productId, menuData }: { view: View; productId?
     return [{ ...line, product, unitPrice: product.price + optionPrice }];
   }), [cart, data.products]);
   const total = detailedCart.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
-  const count = detailedCart.reduce((sum, line) => sum + line.quantity, 0);
+  const count = cart.reduce((sum, line) => sum + line.quantity, 0);
   const addToCart = (line: CartLine) => { setCart((current) => [...current, line]); setToast("Lagt i kurven"); window.setTimeout(() => setToast(""), 2200); };
 
   let content: React.ReactNode;
@@ -71,7 +97,7 @@ function AppHeader({ view, cartCount }: { view: View; cartCount: number }) {
   const showCart = view !== "cart" && view !== "checkout";
   return <header className="app-header">
     {back && <Link className="header-back" href={back} aria-label="Gå tilbage">←</Link>}
-    <Link href="/" className="brand" aria-label="Tee-Time forside"><Image className="brand-logo" src="/images/tee-time-logo.png" alt="" width={40} height={40} priority /><span>Tee-Time<small>Roskilde Golf Restaurant</small></span></Link>
+    <Link href="/" className="brand" aria-label="Tee-Time forside"><Image className="brand-logo" src="/images/pwa-icon-192.png" alt="" width={40} height={40} priority /><span>Tee-Time<small>Roskilde Golf Restaurant</small></span></Link>
     {showCart && <Link className="cart-link" href="/kurv" aria-label={`Kurv med ${cartCount} varer`}>Kurv <span aria-hidden="true">{cartCount}</span></Link>}
   </header>;
 }
@@ -104,7 +130,7 @@ function Checkout({ hours, lines, total, onOrderCreated }: { hours: RestaurantHo
 
     let requestedMinutes = 0;
     if (requestedTime) {
-      requestedMinutes = Math.round((timeOfDayToDate(requestedTime).getTime() - Date.now()) / 60_000);
+      requestedMinutes = minutesUntilTimeOfDay(requestedTime);
       if (requestedMinutes < minLeadMinutes) nextFieldErrors.requestedTime = `Vælg et tidspunkt mindst ${minLeadMinutes} minutter fra nu.`;
     }
 
@@ -116,9 +142,8 @@ function Checkout({ hours, lines, total, onOrderCreated }: { hours: RestaurantHo
     const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ idempotencyKey: idempotencyKey.current, placement: "bane", requestedMinutes, locationDetail: "", customerName, phone, lines: lines.map((line) => ({ productId: line.product.id, quantity: line.quantity, options: line.options, note: line.note })) }) }).catch(() => undefined);
     if (!response?.ok) { setError((await response?.json().catch(() => undefined))?.error ?? "Ordren kunne ikke sendes. Prøv igen."); setSubmitting(false); return; }
     const created = await response.json() as { token: string };
-    const tokens = JSON.parse(window.localStorage.getItem(orderTokensKey) ?? "[]") as string[];
-    window.localStorage.setItem(orderTokensKey, JSON.stringify([...new Set([created.token, ...tokens])].slice(0, 20)));
-    window.localStorage.removeItem(storageKey);
+    writeStorage(orderTokensKey, [...new Set([created.token, ...readStoredOrderTokens()])].slice(0, 20));
+    try { window.localStorage.removeItem(storageKey); } catch {}
     onOrderCreated();
     window.location.assign(`/ordre/bekraeftelse#${created.token}`);
   }
@@ -143,7 +168,7 @@ function Checkout({ hours, lines, total, onOrderCreated }: { hours: RestaurantHo
     </form>}
   </section>;
 }
-function readStatusToken() { if (typeof window === "undefined") return undefined; const token = window.location.hash.slice(1); return /^[A-Za-z0-9_-]{32,}$/.test(token) ? token : undefined; }
+function readStatusToken() { if (typeof window === "undefined") return undefined; const token = window.location.hash.slice(1); return tokenPattern.test(token) ? token : undefined; }
 function Confirmation() { const headingRef = useRef<HTMLHeadingElement>(null); const [token, setToken] = useState<string>(); useEffect(() => { headingRef.current?.focus(); setToken(readStatusToken()); }, []); return <section className="confirmation"><span className="success-icon" aria-hidden="true">✓</span><header className="page-heading"><h1 tabIndex={-1} ref={headingRef}>Din ordre er modtaget</h1><p role="status">Restauranten gennemgår den nu. Du kan følge status på dette personlige link.</p></header>{token && <Link href={`/ordre#${token}`} className="button button-primary">Se ordrestatus</Link>}<Link href="/menu" className="button button-secondary">Tilbage til menuen</Link></section>; }
 function Status() {
   const [token, setToken] = useState<string>();
@@ -188,7 +213,7 @@ function statusMessage(order: OrderView) {
 
 const statusLabels: Record<OrderView["status"], string> = { received: "Modtaget", approved: "Godkendt", rejected: "Afvist", preparing: "Godkendt", ready: "Godkendt", delivering: "Godkendt", completed: "Godkendt" };
 function OrderLines({ order }: { order: OrderView }) { return <div className="status-order-card">{order.items.map((item) => <span key={item.id}>{item.productName}{item.options.length ? ` · ${item.options.map((option) => option.name).join(", ")}` : ""}<b>{formatPrice(((item.unitPriceOre + item.options.reduce((sum, option) => sum + option.priceDeltaOre, 0)) * item.quantity) / 100)}</b></span>)}<strong>Total <b>{formatPrice(order.totalOre / 100)}</b></strong></div>; }
-function Offers({ offers }: { offers: GuestMenuData["offers"] }) { return <section><PageHeading title="Tilbud" text="Lidt ekstra godt efter runden." /><div className="offer-list">{offers.map((offer) => { const src = resolveImagePath(offer.imagePath, `/images/produktbilleder/tilbud/${offer.id}.webp`); return <article className={`offer-card${offer.soldOut ? " sold-out" : ""}`} key={offer.id}>{src ? <Image src={src} alt="" width={640} height={360} /> : <div className="offer-image image-placeholder" aria-hidden="true" />}{offer.soldOut && <em>Udsolgt</em>}<div><small>{offer.badge}</small><h2>{offer.title}</h2><p>{offer.description}</p>{typeof offer.price === "number" && <b className="offer-price">{formatPrice(offer.price)}</b>}{offer.soldOut ? <span className="button button-secondary offer-sold-out-button" aria-disabled="true">Udsolgt</span> : <Link href={offer.orderSlug ? `/menu/${offer.orderSlug}` : "/menu"} className="button button-secondary">Bestil nu</Link>}</div></article>; })}</div></section>; }
+function Offers({ offers }: { offers: Offer[] }) { return <section><PageHeading title="Tilbud" text="Lidt ekstra godt efter runden." /><div className="offer-list">{offers.map((offer) => { const src = resolveImagePath(offer.imagePath, `/images/produktbilleder/tilbud/${offer.id}.webp`); return <article className={`offer-card${offer.soldOut ? " sold-out" : ""}`} key={offer.id}>{src ? <Image src={src} alt="" width={640} height={360} /> : <div className="offer-image image-placeholder" aria-hidden="true" />}{offer.soldOut && <em>Udsolgt</em>}<div><small>{offer.badge}</small><h2>{offer.title}</h2><p>{offer.description}</p>{typeof offer.price === "number" && <b className="offer-price">{formatPrice(offer.price)}</b>}{offer.soldOut ? <span className="button button-secondary offer-sold-out-button" aria-disabled="true">Udsolgt</span> : <Link href={offer.orderSlug ? `/menu/${offer.orderSlug}` : "/menu"} className="button button-secondary">Bestil nu</Link>}</div></article>; })}</div></section>; }
 function PageHeading({ eyebrow, title, text }: { eyebrow?: string; title: string; text?: string }) { return <header className="page-heading">{eyebrow && <small>{eyebrow}</small>}{title && <h1>{title}</h1>}{text && <p>{text}</p>}</header>; }
 function OrderSummary({ total }: { total: number }) { return <><div className="order-summary"><span>Varer <b>{formatPrice(total)}</b></span><span>Betaling <b>Ved afhentning</b></span><strong>Total <b>{formatPrice(total)}</b></strong></div><p className="privacy-link">Når du sender ordren, accepterer du vores <Link href="/databeskyttelse">databeskyttelse</Link>.</p></>; }
 function EmptyCart() { return <div className="empty-state"><h2>Kurven er tom</h2><p>Vælg noget fra menuen, når du er klar.</p><Link href="/menu" className="button button-secondary">Se menuen</Link></div>; }
@@ -216,7 +241,7 @@ function SessionPrevious() {
   const [tokens, setTokens] = useState<Record<string, string>>({});
   useEffect(() => {
     void fetch("/api/orders/history", { cache: "no-store" }).then(async (response) => response.ok ? response.json() as Promise<{ orders: OrderView[] }> : { orders: [] }).then((data) => setOrders(data.orders));
-    const savedTokens = JSON.parse(window.localStorage.getItem(orderTokensKey) ?? "[]") as string[];
+    const savedTokens = readStoredOrderTokens();
     void Promise.all(savedTokens.map(async (token) => { const response = await fetch("/api/orders/status", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ token }) }); return response.ok ? { token, orderNumber: (await response.json() as OrderView).orderNumber } : undefined; })).then((rows) => setTokens(Object.fromEntries(rows.filter((row): row is { token: string; orderNumber: string } => Boolean(row)).map((row) => [row.orderNumber, row.token]))));
   }, []);
   return <section><PageHeading title="Tidligere bestillinger" text="Vises kun på denne enhed." />{orders.length === 0 ? <div className="empty-state"><p>Du har endnu ingen tidligere bestillinger på denne enhed.</p><Link href="/menu" className="button button-secondary">Se menuen</Link></div> : orders.map((order) => { const token = tokens[order.orderNumber]; const body = <><span><strong>{order.orderNumber}</strong><small>{order.items.map((item) => item.productName).join(", ")}</small></span><span><b>{formatPrice(order.totalOre / 100)}</b><small>{statusLabels[order.status]} →</small></span></>; return token ? <Link className="previous-card" key={order.orderNumber} href={`/tidligere/status#${token}`}>{body}</Link> : <article className="previous-card" key={order.orderNumber}>{body}</article>; })}</section>;
@@ -233,7 +258,7 @@ function SecurePreviousDetail() {
     const response = await fetch("/api/orders/reorder", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ token }) }).catch(() => undefined);
     if (!response?.ok) { setMessage("Genbestilling kunne ikke forberedes."); setReordering(false); return; }
     const result = await response.json() as { lines: CartLine[]; unavailable: string[] };
-    if (result.lines.length) window.localStorage.setItem(storageKey, JSON.stringify(result.lines));
+    if (result.lines.length && !writeStorage(storageKey, result.lines)) { setMessage("Kurven kunne ikke gemmes på enheden."); setReordering(false); return; }
     if (result.unavailable.length) { setMessage(`Ikke længere tilgængelig: ${result.unavailable.join(", ")}.`); setReordering(false); return; }
     window.location.assign("/kurv");
   }

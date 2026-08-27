@@ -36,6 +36,11 @@ export function timeOfDayToDate(hm: string, base = new Date()) {
   return date;
 }
 
+/** Round up so a 10:00 slot never becomes 09:59:xx when sent as relative minutes. */
+export function minutesUntilTimeOfDay(hm: string, now = new Date()) {
+  return Math.ceil((timeOfDayToDate(hm, now).getTime() - now.getTime()) / 60_000);
+}
+
 /** The same slot list guests use to pick a time: 15-minute steps, bounded by opening hours and a minimum lead time. */
 export function useTimeSlots(hours: RestaurantHours) {
   const [minTime, setMinTime] = useState("");

@@ -24,11 +24,26 @@ const otpEventSchema = z.object({
 const magicLinkEventSchema = z.object({
   event_type: z.literal("send.magic_link"),
   user: z.object({ email: z.string().email() }),
-  event_data: z.object({ link_url: z.string().min(1), link_type: linkTypeSchema }),
+  event_data: z.object({ link_url: z.string().url().max(2_048), link_type: linkTypeSchema }),
 });
+
+function isAllowedAuthLink(value: string) {
+  const allowedOrigins = [process.env.NEON_AUTH_BASE_URL, process.env.NEXT_PUBLIC_APP_URL]
+    .flatMap((candidate) => {
+      try { return candidate ? [new URL(candidate).origin] : []; } catch { return []; }
+    });
+  try {
+    const url = new URL(value);
+    const localHttp = process.env.DEPLOYMENT_ENV === "local" && url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+    return (url.protocol === "https:" || localHttp) && allowedOrigins.includes(url.origin);
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
+  if (rawBody.length > 65_536) return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
 
   try {
     await verifyNeonAuthWebhook(rawBody, request.headers);
@@ -37,7 +52,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const rawJson: unknown = JSON.parse(rawBody);
+  const rawJson: unknown = await Promise.resolve().then(() => JSON.parse(rawBody)).catch(() => undefined);
   const envelope = eventTypeSchema.safeParse(rawJson);
   if (!envelope.success) return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
 
@@ -50,6 +65,7 @@ export async function POST(request: Request) {
       }
       case "send.magic_link": {
         const event = magicLinkEventSchema.parse(rawJson);
+        if (!isAllowedAuthLink(event.event_data.link_url)) return NextResponse.json({ error: "invalid_link" }, { status: 400 });
         await sendAuthLinkEmail({ to: event.user.email, linkType: event.event_data.link_type, linkUrl: event.event_data.link_url });
         break;
       }

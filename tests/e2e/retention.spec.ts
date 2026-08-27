@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { neon } from "@neondatabase/serverless";
+import { testOrigin, testRequestedMinutes } from "./test-config";
 
 test("the protected cron anonymizes customer data and invalidates status access after 30 days", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "tablet-chromium", "One shared database retention scenario is sufficient.");
   test.skip(!process.env.DATABASE_URL || !process.env.CRON_SECRET || process.env.DEPLOYMENT_ENV !== "local", "Retention integration test only uses explicit local credentials.");
   const created = await page.request.post("/api/orders", {
-    headers: { Origin: "http://localhost:3000" },
-    data: { idempotencyKey: crypto.randomUUID(), placement: "terrasse", requestedMinutes: 30, locationDetail: "Privat bord", customerName: "Retention test", phone: "", lines: [{ productId: "burger-klub", quantity: 1, options: [], note: "Privat bemærkning" }] },
+    headers: { Origin: testOrigin },
+    data: { idempotencyKey: crypto.randomUUID(), placement: "terrasse", requestedMinutes: testRequestedMinutes(), locationDetail: "Privat bord", customerName: "Retention test", phone: "", lines: [{ productId: "burger-klub", quantity: 1, options: [], note: "Privat bemærkning" }] },
   });
   expect(created.status()).toBe(201);
   const order = await created.json() as { token: string; orderNumber: string };

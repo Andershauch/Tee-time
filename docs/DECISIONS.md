@@ -2,6 +2,9 @@
 
 | Dato | Beslutning | Status | Konsekvens |
 | --- | --- | --- | --- |
+| 2026-08-27 | Offentlige sider bruger statisk CSP og prerendering; nonce-CSP afgrænses til login, personale og menuadmin. | Besluttet | En global nonce gjorde alle sider dynamiske og fjernede CDN-cache. Backoffice bevarer den strengeste politik, mens den offentlige app fortsat har en snæver CSP og ingen brugerdefineret HTML-rendering. |
+| 2026-08-27 | Gæst, personale og menuadmin udgives som tre PWA-profiler med separate manifest-id'er og startadresser. | Besluttet | Installerede ikoner åbner den relevante arbejdsflade på Android, iPhone og iPad uden at ændre adgangskontrollen. |
+| 2026-08-27 | Menu-readmodellen caches i 60 sekunder og invalides efter adminmutationer; checkout er altid frisk og transaktionel. | Besluttet | Reducerer Neon-latens og egress uden at stole på cache for pris, lager eller ordreaccept. |
 | 2026-08-14 | V1 er en Next.js-app på Vercel med Neon Postgres og Brevo. | Besluttet | Den tidligere Supabase/Hetzner-retning anvendes ikke. |
 | 2026-08-14 | Gæster modtager ikke e-mail i V1. | Besluttet | Kvittering og status vises i appen via et personligt statuslink. |
 | 2026-08-14 | Restauranten får én driftsmail ved hver serverbekræftet, ny ordre. | Besluttet | Mail sendes efter database-commit og må ikke blokere ordreoprettelse. |

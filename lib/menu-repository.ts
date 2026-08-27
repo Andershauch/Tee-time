@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { getDb } from "@/db/client";
 import { allergens, categories, offers, productAllergens, productOptions, products } from "@/db/schema";
 import { categories as fixtureCategories, offers as fixtureOffers, products as fixtureProducts } from "@/lib/fixtures";
@@ -73,5 +74,11 @@ export async function getMenuReadModel(): Promise<MenuReadModel> {
     return { categories: fixtureCategories, products: fixtureProducts, offers: fixtureOffers, hours: defaultRestaurantHours, source: "fixtures" };
   }
 
-  return getActiveMenuFromNeon();
+  return getCachedActiveMenuFromNeon();
 }
+
+const getCachedActiveMenuFromNeon = unstable_cache(
+  () => getActiveMenuFromNeon(),
+  ["tee-time-active-menu-v1"],
+  { revalidate: 60, tags: ["guest-menu"] },
+);

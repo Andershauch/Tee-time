@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { AuthenticationRequiredError, AuthorizationError, requireStaff } from "@/lib/auth/access";
 import { AdminCatalogConflictError, createAllergen, createCategory, createOffer, createOption, createProduct, setProductAllergen, updateCatalogRecord } from "@/lib/admin-catalog";
 import { isTrustedMutation } from "@/lib/request-origin";
 
 const text = z.string().trim().min(1).max(240);
-const imagePath = z.string().trim().max(2_000);
+const imagePath = z.string().trim().max(2_000).refine((value) => {
+  if (value === "" || value.startsWith("/images/")) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}, "Ugyldig billedadresse.");
 const patchSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("category"), id: z.string().min(1), patch: z.object({ name: text.optional(), isActive: z.boolean().optional() }).refine((value) => Object.keys(value).length > 0) }),
   z.object({ kind: z.literal("product"), id: z.string().min(1), patch: z.object({ name: text.optional(), description: z.string().trim().max(1_000).optional(), priceOre: z.number().int().min(0).max(1_000_000).optional(), imagePath: imagePath.optional(), isSoldOut: z.boolean().optional(), isActive: z.boolean().optional() }).refine((value) => Object.keys(value).length > 0) }),
@@ -31,10 +40,12 @@ export async function PATCH(request: Request) {
     if (!parsed.success) return NextResponse.json({ error: "Ugyldig menuændring." }, { status: 400 });
     if (parsed.data.kind === "product-allergen") {
       await setProductAllergen(parsed.data.productId, parsed.data.allergenId, parsed.data.isActive);
+      revalidateTag("guest-menu", { expire: 0 });
       return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
     }
     const changed = await updateCatalogRecord(parsed.data);
     if (!changed.length) return NextResponse.json({ error: "Posten findes ikke." }, { status: 404 });
+    revalidateTag("guest-menu", { expire: 0 });
     return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return NextResponse.json({ error: "Log ind for at fortsætte." }, { status: 401 });
@@ -55,6 +66,7 @@ export async function POST(request: Request) {
       : data.kind === "product" ? await createProduct(data.categoryId, data.name, data.priceOre)
       : data.kind === "option" ? await createOption(data.productId, data.name, data.priceDeltaOre)
       : await createOffer(data.title, data.badge, data.description, data.priceOre);
+    revalidateTag("guest-menu", { expire: 0 });
     return NextResponse.json({ ok: true, item }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return NextResponse.json({ error: "Log ind for at fortsætte." }, { status: 401 });

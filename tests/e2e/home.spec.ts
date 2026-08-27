@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
+import { testOrigin, testRequestedMinutes } from "./test-config";
 
 test("server ignores forged prices and a first-visit double submit creates one order", async ({ browser }, testInfo) => {
   test.skip(testInfo.project.name !== "tablet-chromium", "One server-side price/idempotency scenario is sufficient.");
   const context = await browser.newContext();
   const page = await context.newPage();
   await page.goto("/");
-  const body = { idempotencyKey: crypto.randomUUID(), placement: "klubhus", requestedMinutes: 30, locationDetail: "", customerName: "Pris-test", phone: "", totalOre: 1, lines: [{ productId: "burger-klub", quantity: 1, options: ["Ekstra bacon"], note: "", unitPriceOre: 1 }] };
-  const post = () => page.request.post("/api/orders", { headers: { Origin: "http://localhost:3000" }, data: body });
+  const body = { idempotencyKey: crypto.randomUUID(), placement: "klubhus", requestedMinutes: testRequestedMinutes(), locationDetail: "", customerName: "Pris-test", phone: "", totalOre: 1, lines: [{ productId: "burger-klub", quantity: 1, options: ["Ekstra bacon"], note: "", unitPriceOre: 1 }] };
+  const post = () => page.request.post("/api/orders", { headers: { Origin: testOrigin }, data: body });
   const [first, second] = await Promise.all([post(), post()]);
   const created = first.status() === 201 ? await first.json() as { token: string } : await second.json() as { token: string };
   const status = await page.request.post("/api/orders/status", { data: { token: created.token } });
@@ -33,8 +34,9 @@ test("creates and reopens a real guest order", async ({ page }) => {
   await page.getByRole("button", { name: /Læg i kurv/ }).click();
   await page.getByRole("link", { name: /Kurv med 1 varer/ }).click();
   await page.getByRole("link", { name: "Fortsæt til bestilling" }).click();
-  const timeOptions = await page.locator("select").first().locator("option").allTextContents();
-  await page.locator("select").first().selectOption(timeOptions[1]);
+  const timeSelect = page.getByLabel("Tidspunkt");
+  await expect(timeSelect).toBeVisible();
+  await timeSelect.selectOption({ index: 1 });
   await page.getByLabel("Navn").fill("Testgæst");
   await page.getByLabel("Mobilnummer").fill("12345678");
   await page.getByRole("button", { name: "Send ordre til restauranten" }).click();

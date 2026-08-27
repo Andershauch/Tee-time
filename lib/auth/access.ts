@@ -36,11 +36,21 @@ export async function revokeStaffSessionsForUser(authUserId: string) {
 export async function currentStaff() {
   const token = (await cookies()).get(staffSessionCookie)?.value;
   if (!token) return undefined;
-  const [session] = await getDb().select().from(staffSessions).where(and(eq(staffSessions.sessionTokenHash, hash(token)), gt(staffSessions.expiresAt, new Date()))).limit(1);
-  if (!session) return undefined;
-  const [profile] = await getDb().select().from(staffProfiles).where(and(eq(staffProfiles.authUserId, session.authUserId), eq(staffProfiles.isActive, true))).limit(1);
+  const [result] = await getDb().select({
+    authUserId: staffSessions.authUserId,
+    displayName: staffProfiles.displayName,
+    role: staffProfiles.role,
+  }).from(staffSessions)
+    .innerJoin(staffProfiles, eq(staffProfiles.authUserId, staffSessions.authUserId))
+    .where(and(
+      eq(staffSessions.sessionTokenHash, hash(token)),
+      gt(staffSessions.expiresAt, new Date()),
+      eq(staffProfiles.isActive, true),
+    ))
+    .limit(1);
+  const profile = result;
   if (!profile || (profile.role !== "staff" && profile.role !== "admin")) return undefined;
-  return { id: session.authUserId, displayName: profile.displayName, role: profile.role as StaffRole };
+  return { id: profile.authUserId, displayName: profile.displayName, role: profile.role as StaffRole };
 }
 
 export async function requireStaff(roles: StaffRole[] = ["staff", "admin"]) {

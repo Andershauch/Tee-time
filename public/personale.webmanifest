@@ -1,0 +1,16 @@
+{
+  "id": "/personale",
+  "name": "Tee-Time Personale",
+  "short_name": "Personale",
+  "description": "Ordreoverblik til restaurantens personale.",
+  "lang": "da",
+  "start_url": "/personale",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f3ec",
+  "theme_color": "#1e3328",
+  "icons": [
+    { "src": "/images/pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/images/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

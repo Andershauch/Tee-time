@@ -46,6 +46,9 @@ Kundeoplysninger anonymiseres automatisk senest 30 dage efter ordreoprettelsen a
 - [ ] `CRON_SECRET` beskytter retry-ruten, og Vercel Cron-kørslen er observeret. På Hobby er den daglig; planlæg femminutters retry før drift.
 - [ ] CSP, HSTS (production), `nosniff`, frame- og permissions-policy er tjekket i preview-browseren.
 - [ ] Service worker cacher kun offline-siden og billeder; personale, admin, ordrestatus og API-svar er ikke cachet.
+- [ ] Gæsteprofilen er installeret og genåbnet på en rigtig Android-telefon og iPhone.
+- [ ] Personale- og menuadmin-profilerne er installeret og genåbnet fra egne ikoner på restaurantens iPad.
+- [ ] En ny deployment har erstattet den tidligere service-worker-cache uden at vise gamle menudata som aktuelle.
 - [ ] Retention- og beredskabsbeslutningen ovenfor er godkendt af den dataansvarlige.
 
 ## Rollback

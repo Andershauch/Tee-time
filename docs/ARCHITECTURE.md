@@ -77,3 +77,12 @@ Kun `public/images/` er runtime-kilde. Eksempler:
 - `/images/produktbilleder/produkter/aeblekage.webp`
 
 `design-references/` er en separat, ikke-eksekverbar designkilde.
+
+## Rendering, cache og PWA
+
+- Offentlige sider bruger en statisk CSP og kan prerenderes eller CDN-caches. Login, personale og menuadmin matcher fortsat `proxy.ts` og får en unik nonce pr. request.
+- Den offentlige menu-readmodel caches i 60 sekunder under tagget `guest-menu`. Adminmutationer udløser en øjeblikkelig tag-invalidering. Ordretransaktionen læser altid friske, låste produkt- og tilvalgsrækker.
+- Gæst, personale og menuadmin har separate manifest-id'er og startadresser, men deler service worker og kodebase.
+- Service workeren precacher kun offline-siden og et lille ikon. Private ruter, API'er og Next.js-chunks styres aldrig af dens runtime-cache.
+
+Den detaljerede installations- og offlinepolitik findes i [PWA-guiden](PWA.md). Auditens målinger og risikovurdering findes i [teknisk audit](TECHNICAL-AUDIT.md).

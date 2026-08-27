@@ -59,7 +59,7 @@ export async function sendAuthLinkEmail(input: { to: string; linkType: NeonAuthL
   const html = layout(fromName, `
     <h1 style="font-size: 20px;">${escapeHtml(subject)}</h1>
     <p>${escapeHtml(introForLink(input.linkType))}</p>
-    <p style="margin: 24px 0;"><a href="${input.linkUrl}" style="display: inline-block; background: #14532d; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px;">Fortsæt</a></p>
+    <p style="margin: 24px 0;"><a href="${escapeHtml(input.linkUrl)}" style="display: inline-block; background: #14532d; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px;">Fortsæt</a></p>
     <p style="font-size: 13px; color: #6b7280;">Virker knappen ikke? Kopiér dette link:<br />${escapeHtml(input.linkUrl)}</p>
   `);
   const { error } = await getClient().emails.send({ from: `${fromName} <${fromAddress}>`, to: input.to, subject, html });

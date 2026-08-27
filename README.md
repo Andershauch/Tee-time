@@ -47,6 +47,8 @@ De lokale browsertestkonti læses kun fra `.env.local`. Opret dem med `db:provis
 - [Databaseopsætning](docs/DATABASE.md)
 - [Auth-drift](docs/AUTH.md)
 - [Release og rollback](docs/RELEASE.md)
+- [Teknisk audit og refactor](docs/TECHNICAL-AUDIT.md)
+- [PWA-installation og test](docs/PWA.md)
 - [Assets og licenser](docs/assets-and-licensing.md)
 
 ## Asset-URL'er
