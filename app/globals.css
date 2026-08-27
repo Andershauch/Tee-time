@@ -74,6 +74,9 @@ textarea:focus-visible {
 .skip-link:focus { transform: translateY(0); }
 
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -81,6 +84,7 @@ textarea:focus-visible {
   padding: 8px 16px;
   border-bottom: 1px solid #ede4cf;
   background: #f7f3eced;
+  backdrop-filter: blur(10px);
 }
 
 .brand,
@@ -104,6 +108,7 @@ textarea:focus-visible {
 .hero {
   position: relative;
   height: clamp(200px, 34vh, 320px);
+  margin-top: 18px;
   overflow: hidden;
   border-radius: 18px;
   background: var(--color-forest);
@@ -208,8 +213,8 @@ textarea { min-height: 78px; resize: vertical; }
 .bottom-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 60px; min-height: 52px; padding: 6px 8px; border-radius: 16px; color: #7a8079; font-size: 11px; font-weight: 700; text-decoration: none; transition: color 150ms ease, background-color 150ms ease; }
 .bottom-nav a svg { width: 22px; height: 22px; }
 .bottom-nav a.active { color: var(--color-forest); background: color-mix(in srgb, var(--color-forest) 12%, transparent); font-weight: 800; }
-.toast { position: fixed; z-index: 20; right: 20px; bottom: 90px; left: 20px; min-height: 1px; color: #fff; text-align: center; pointer-events: none; }
-.toast:not(:empty) { padding: 12px; border-radius: 99px; background: var(--color-forest); }
+.toast { position: fixed; z-index: 20; top: 50%; right: 20px; left: 20px; min-height: 1px; color: #fff; text-align: center; pointer-events: none; transform: translateY(-50%); }
+.toast:not(:empty) { padding: 12px; border-radius: 99px; background: color-mix(in srgb, var(--color-forest) 90%, transparent); }
 
 @media (prefers-reduced-motion: no-preference) {
   .toast:not(:empty) { animation: toast-in 180ms ease-out; }
@@ -217,9 +222,13 @@ textarea { min-height: 78px; resize: vertical; }
   .button:active { transform: scale(.985); }
 }
 
-@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(calc(-50% + 8px)); } to { opacity: 1; transform: translateY(-50%); } }
 
-.sticky-action { position: sticky; bottom: 10px; z-index: 4; box-shadow: 0 5px 18px rgba(30,51,40,.18); }
+.page-content:has(.action-bar) { padding-bottom: 108px; }
+.action-bar { position: fixed; z-index: 9; right: 0; bottom: calc(68px + env(safe-area-inset-bottom)); left: 0; padding: 10px 20px; background: linear-gradient(to top, var(--color-cream) 60%, transparent); }
+.action-bar .button { box-shadow: 0 5px 18px rgba(30,51,40,.18); }
+.action-bar-stack { display: grid; gap: 8px; }
+.action-bar-stack .button-secondary { margin-top: 0; }
 
 .auth-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: var(--color-forest); }
 .auth-card { display: grid; width: min(100%, 430px); gap: 14px; padding: 30px; border-radius: 18px; background: var(--color-cream); box-shadow: 0 16px 50px rgba(0,0,0,.24); }

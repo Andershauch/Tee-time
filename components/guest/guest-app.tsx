@@ -4,6 +4,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { Offer, Product } from "@/lib/fixtures";
 import { formatPrice } from "@/lib/format";
@@ -101,11 +102,12 @@ function AppHeader({ view, cartCount }: { view: View; cartCount: number }) {
     {showCart && <Link className="cart-link" href="/kurv" aria-label={`Kurv med ${cartCount} varer`}>Kurv <span aria-hidden="true">{cartCount}</span></Link>}
   </header>;
 }
-function Home() { return <><div className="hero"><Image src="/images/golf-restaurant-terrasse.jpg" alt="Terrassen ved golfrestauranten" fill priority sizes="(max-width: 600px) 100vw, 480px" /></div><section className="intro"><h1>Banebestilling</h1><p>Bestil mad og drikke fra banen. Vi har det klar til det tidspunkt, du vælger.</p><Link className="button button-primary" href="/menu">Bestil</Link></section></>; }
+function ActionBar({ children }: { children: React.ReactNode }) { return <div className="action-bar">{children}</div>; }
+function Home() { return <><div className="hero"><Image src="/images/golf-restaurant-terrasse.jpg" alt="Terrassen ved golfrestauranten" fill priority sizes="(max-width: 600px) 100vw, 480px" /></div><section className="intro"><h1>Banebestilling</h1><p>Bestil mad og drikke fra banen. Vi har det klar til det tidspunkt, du vælger.</p></section><ActionBar><Link className="button button-primary" href="/menu">Bestil</Link></ActionBar></>; }
 function Menu({ categories, products }: { categories: readonly string[]; products: Product[] }) { const [activeCategory, setActiveCategory] = useState(categories[0] ?? ""); return <section><PageHeading title="Menu" text="Bestil, når det passer ind i din runde." /><nav className="category-tabs" aria-label="Menukategorier">{categories.map((category) => <button key={category} aria-pressed={activeCategory === category} className={activeCategory === category ? "active" : ""} onClick={() => setActiveCategory(category)}>{category}</button>)}</nav><div className="product-list">{products.filter((product) => product.category === activeCategory).map((product) => <ProductCard key={product.id} product={product} />)}</div></section>; }
 function ProductCard({ product }: { product: Product }) { const src = resolveImagePath(product.imagePath, `/images/produktbilleder/produkter/${product.id}.webp`); const body = <>{src ? <Image className="product-image" src={src} alt="" width={92} height={92} /> : <span className="product-image image-placeholder" aria-hidden="true" />}<span className="product-copy"><strong>{product.name}</strong><span>{product.description}</span><span className="chips">{product.allergens.map((allergen) => <i key={allergen}>{allergen}</i>)}</span><b>{formatPrice(product.price)}</b></span></>; return product.soldOut ? <div className="product-card sold-out" aria-label={`${product.name}, udsolgt`}>{body}<em>Udsolgt</em></div> : <Link href={`/menu/${product.id}`} className="product-card">{body}</Link>; }
-function ProductDetail({ product, onAdd }: { product?: Product; onAdd: (line: CartLine) => void }) { const [quantity, setQuantity] = useState(1); const [selectedOptions, setSelectedOptions] = useState<string[]>([]); const [note, setNote] = useState(""); if (!product) return <PageHeading title="Produktet findes ikke" text="Vælg et produkt fra menuen." />; const price = product.price + selectedOptions.reduce((sum, option) => sum + (product.options?.find((item) => item.label === option)?.price ?? 0), 0); const src = resolveImagePath(product.imagePath, `/images/produktbilleder/produkter/${product.id}.webp`); return <section>{src ? <Image className="detail-image" src={src} alt={product.name} width={640} height={420} priority /> : <div className="detail-image image-placeholder" aria-hidden="true" />}<PageHeading title={product.name} text={product.description} /><p className="price">{formatPrice(product.price)}</p><div className="chips large">{product.allergens.map((allergen) => <i key={allergen}>{allergen}</i>)}</div>{product.options && product.options.length > 0 && <fieldset className="options"><legend>Gør den til din egen</legend>{product.options.map((option) => <label key={option.label}><input type="checkbox" checked={selectedOptions.includes(option.label)} onChange={() => setSelectedOptions((current) => current.includes(option.label) ? current.filter((item) => item !== option.label) : [...current, option.label])} />{option.label}<span>{option.price ? `+${formatPrice(option.price)}` : "Uden merpris"}</span></label>)}</fieldset>}<label className="field-label" htmlFor="note">Bemærkning <small>valgfrit</small></label><textarea id="note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={160} placeholder="Fx uden bestik" /><div className="add-bar"><Quantity value={quantity} onChange={setQuantity} /><button className="button button-primary" onClick={() => onAdd({ productId: product.id, quantity, options: selectedOptions, note })}>Læg i kurv · {formatPrice(price * quantity)}</button></div></section>; }
-function Cart({ lines, total, onQuantity }: { lines: Array<CartLine & { product: Product; unitPrice: number }>; total: number; onQuantity: (index: number, quantity: number) => void }) { return <section><PageHeading title="Kurv" text="Gennemgå din bestilling, før du fortsætter." />{lines.length === 0 ? <EmptyCart /> : <><div className="cart-list">{lines.map((line, index) => <article key={`${line.productId}-${index}`} className="cart-line"><div><strong>{line.product.name}</strong>{line.options.length > 0 && <small>{line.options.join(", ")}</small>}{line.note && <small>“{line.note}”</small>}<b>{formatPrice(line.unitPrice * line.quantity)}</b></div><Quantity value={line.quantity} onChange={(quantity) => onQuantity(index, quantity)} /></article>)}</div><OrderSummary total={total} /><Link href="/bestilling" className="button button-primary sticky-action">Fortsæt til bestilling</Link></>}</section>; }
+function ProductDetail({ product, onAdd }: { product?: Product; onAdd: (line: CartLine) => void }) { const [quantity, setQuantity] = useState(1); const [selectedOptions, setSelectedOptions] = useState<string[]>([]); const [note, setNote] = useState(""); if (!product) return <PageHeading title="Produktet findes ikke" text="Vælg et produkt fra menuen." />; const price = product.price + selectedOptions.reduce((sum, option) => sum + (product.options?.find((item) => item.label === option)?.price ?? 0), 0); const src = resolveImagePath(product.imagePath, `/images/produktbilleder/produkter/${product.id}.webp`); return <><section>{src ? <Image className="detail-image" src={src} alt={product.name} width={640} height={420} priority /> : <div className="detail-image image-placeholder" aria-hidden="true" />}<PageHeading title={product.name} text={product.description} /><p className="price">{formatPrice(product.price)}</p><div className="chips large">{product.allergens.map((allergen) => <i key={allergen}>{allergen}</i>)}</div>{product.options && product.options.length > 0 && <fieldset className="options"><legend>Gør den til din egen</legend>{product.options.map((option) => <label key={option.label}><input type="checkbox" checked={selectedOptions.includes(option.label)} onChange={() => setSelectedOptions((current) => current.includes(option.label) ? current.filter((item) => item !== option.label) : [...current, option.label])} />{option.label}<span>{option.price ? `+${formatPrice(option.price)}` : "Uden merpris"}</span></label>)}</fieldset>}<label className="field-label" htmlFor="note">Bemærkning <small>valgfrit</small></label><textarea id="note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={160} placeholder="Fx uden bestik" /></section><ActionBar><div className="add-bar"><Quantity value={quantity} onChange={setQuantity} /><button className="button button-primary" onClick={() => onAdd({ productId: product.id, quantity, options: selectedOptions, note })}>Læg i kurv · {formatPrice(price * quantity)}</button></div></ActionBar></>; }
+function Cart({ lines, total, onQuantity }: { lines: Array<CartLine & { product: Product; unitPrice: number }>; total: number; onQuantity: (index: number, quantity: number) => void }) { return <><section><PageHeading title="Kurv" text="Gennemgå din bestilling, før du fortsætter." />{lines.length === 0 ? <EmptyCart /> : <><div className="cart-list">{lines.map((line, index) => <article key={`${line.productId}-${index}`} className="cart-line"><div><strong>{line.product.name}</strong>{line.options.length > 0 && <small>{line.options.join(", ")}</small>}{line.note && <small>“{line.note}”</small>}<b>{formatPrice(line.unitPrice * line.quantity)}</b></div><Quantity value={line.quantity} onChange={(quantity) => onQuantity(index, quantity)} /></article>)}</div><OrderSummary total={total} /></>}</section>{lines.length > 0 && <ActionBar><Link href="/bestilling" className="button button-primary">Fortsæt til bestilling</Link></ActionBar>}</>; }
 
 function Checkout({ hours, lines, total, onOrderCreated }: { hours: RestaurantHours; lines: Array<CartLine & { product: Product; unitPrice: number }>; total: number; onOrderCreated: () => void }) {
   const [requestedTime, setRequestedTime] = useState("");
@@ -148,8 +150,9 @@ function Checkout({ hours, lines, total, onOrderCreated }: { hours: RestaurantHo
     window.location.assign(`/ordre/bekraeftelse#${created.token}`);
   }
 
-  return <section><PageHeading title="Bestilling" text="Din ordre sendes til restauranten, som først skal godkende den." />
-    {lines.length === 0 ? <EmptyCart /> : closedForToday ? <div className="empty-state"><h2>Lukket for bestillinger</h2><p>Vi holder åbent kl. {hours.opensAt}–{hours.closesAt}. Prøv igen inden for åbningstiden.</p></div> : <form onSubmit={submit} noValidate className="checkout-form">
+  const canSubmit = lines.length > 0 && !closedForToday;
+  return <><section><PageHeading title="Bestilling" text="Din ordre sendes til restauranten, som først skal godkende den." />
+    {lines.length === 0 ? <EmptyCart /> : closedForToday ? <div className="empty-state"><h2>Lukket for bestillinger</h2><p>Vi holder åbent kl. {hours.opensAt}–{hours.closesAt}. Prøv igen inden for åbningstiden.</p></div> : <form id="checkout-form" onSubmit={submit} noValidate className="checkout-form">
       <fieldset>
         <legend>Ønsket tidspunkt</legend>
         <label>Tidspunkt<select required value={requestedTime} aria-invalid={Boolean(fieldErrors.requestedTime)} aria-describedby={fieldErrors.requestedTime ? "requestedTime-error" : undefined} onChange={(event) => { setRequestedTime(event.target.value); setFieldErrors((current) => ({ ...current, requestedTime: undefined })); }}><option value="" disabled>Vælg tidspunkt</option>{timeSlots.map((slot) => <option key={slot} value={slot}>{slot}</option>)}</select></label>
@@ -164,12 +167,30 @@ function Checkout({ hours, lines, total, onOrderCreated }: { hours: RestaurantHo
       </fieldset>
       <OrderSummary total={total} />
       {error && <p className="form-hint" role="alert">{error}</p>}
-      <button className="button button-primary sticky-action" type="submit" disabled={submitting}>{submitting ? "Sender ordre…" : "Send ordre til restauranten"}</button>
     </form>}
-  </section>;
+  </section>{canSubmit && <ActionBar><button className="button button-primary" type="submit" form="checkout-form" disabled={submitting}>{submitting ? "Sender ordre…" : "Send ordre til restauranten"}</button></ActionBar>}</>;
 }
 function readStatusToken() { if (typeof window === "undefined") return undefined; const token = window.location.hash.slice(1); return tokenPattern.test(token) ? token : undefined; }
-function Confirmation() { const headingRef = useRef<HTMLHeadingElement>(null); const [token, setToken] = useState<string>(); useEffect(() => { headingRef.current?.focus(); setToken(readStatusToken()); }, []); return <section className="confirmation"><span className="success-icon" aria-hidden="true">✓</span><header className="page-heading"><h1 tabIndex={-1} ref={headingRef}>Din ordre er modtaget</h1><p role="status">Restauranten gennemgår den nu. Du kan følge status på dette personlige link.</p></header>{token && <Link href={`/ordre#${token}`} className="button button-primary">Se ordrestatus</Link>}<Link href="/menu" className="button button-secondary">Tilbage til menuen</Link></section>; }
+function Confirmation() {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const router = useRouter();
+  const [token, setToken] = useState<string>();
+  useEffect(() => { headingRef.current?.focus(); setToken(readStatusToken()); }, []);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    const check = async () => {
+      const response = await fetch("/api/orders/status", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ token }) });
+      if (!response.ok || !active) return;
+      const order = await response.json() as OrderView;
+      if (active && order.status !== "received") router.replace(`/ordre#${token}`);
+    };
+    void check();
+    const timer = window.setInterval(() => void check(), 7500);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [token, router]);
+  return <><section className="confirmation"><span className="success-icon" aria-hidden="true">✓</span><header className="page-heading"><h1 tabIndex={-1} ref={headingRef}>Din ordre er modtaget</h1><p role="status">Restauranten gennemgår den nu. Du bliver automatisk sendt videre til status, når den er behandlet.</p></header></section><ActionBar><div className="action-bar-stack">{token && <Link href={`/ordre#${token}`} className="button button-primary">Se ordrestatus</Link>}<Link href="/menu" className="button button-secondary">Tilbage til menuen</Link></div></ActionBar></>;
+}
 function Status() {
   const [token, setToken] = useState<string>();
   const [order, setOrder] = useState<OrderView>();
@@ -242,7 +263,10 @@ function SessionPrevious() {
   useEffect(() => {
     void fetch("/api/orders/history", { cache: "no-store" }).then(async (response) => response.ok ? response.json() as Promise<{ orders: OrderView[] }> : { orders: [] }).then((data) => setOrders(data.orders));
     const savedTokens = readStoredOrderTokens();
-    void Promise.all(savedTokens.map(async (token) => { const response = await fetch("/api/orders/status", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ token }) }); return response.ok ? { token, orderNumber: (await response.json() as OrderView).orderNumber } : undefined; })).then((rows) => setTokens(Object.fromEntries(rows.filter((row): row is { token: string; orderNumber: string } => Boolean(row)).map((row) => [row.orderNumber, row.token]))));
+    if (savedTokens.length === 0) return;
+    void fetch("/api/orders/status", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ tokens: savedTokens }) })
+      .then(async (response) => response.ok ? response.json() as Promise<{ orders: Record<string, OrderView> }> : { orders: {} })
+      .then((data) => setTokens(Object.fromEntries(Object.entries(data.orders).map(([token, order]) => [order.orderNumber, token]))));
   }, []);
   return <section><PageHeading title="Tidligere bestillinger" text="Vises kun på denne enhed." />{orders.length === 0 ? <div className="empty-state"><p>Du har endnu ingen tidligere bestillinger på denne enhed.</p><Link href="/menu" className="button button-secondary">Se menuen</Link></div> : orders.map((order) => { const token = tokens[order.orderNumber]; const body = <><span><strong>{order.orderNumber}</strong><small>{order.items.map((item) => item.productName).join(", ")}</small></span><span><b>{formatPrice(order.totalOre / 100)}</b><small>{statusLabels[order.status]} →</small></span></>; return token ? <Link className="previous-card" key={order.orderNumber} href={`/tidligere/status#${token}`}>{body}</Link> : <article className="previous-card" key={order.orderNumber}>{body}</article>; })}</section>;
 }
@@ -262,5 +286,5 @@ function SecurePreviousDetail() {
     if (result.unavailable.length) { setMessage(`Ikke længere tilgængelig: ${result.unavailable.join(", ")}.`); setReordering(false); return; }
     window.location.assign("/kurv");
   }
-  return <section><Status /><button className="button button-primary" type="button" onClick={() => void reorder()} disabled={!token || reordering}>{reordering ? "Forbereder…" : "Genbestil med aktuelle priser"}</button>{message && <p className="form-hint" role="status">{message}</p>}</section>;
+  return <><section><Status />{message && <p className="form-hint" role="status">{message}</p>}</section><ActionBar><button className="button button-primary" type="button" onClick={() => void reorder()} disabled={!token || reordering}>{reordering ? "Forbereder…" : "Genbestil med aktuelle priser"}</button></ActionBar></>;
 }

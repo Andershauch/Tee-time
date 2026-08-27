@@ -60,7 +60,7 @@ async function toStaffOrders(rows: Array<typeof orders.$inferSelect>): Promise<S
 export async function getStaffOrders(scope: "active" | "archived" = "active") {
   const rows = await getDb().select().from(orders)
     .where(scope === "active" ? inArray(orders.status, activeStatuses) : inArray(orders.status, archivedStatuses))
-    .orderBy(scope === "active" ? asc(orders.requestedFor) : desc(orders.updatedAt));
+    .orderBy(desc(orders.createdAt));
   return toStaffOrders(rows);
 }
 
