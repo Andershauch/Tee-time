@@ -39,6 +39,8 @@ Kundeoplysninger anonymiseres automatisk senest 30 dage efter ordreoprettelsen a
 
 ## Releasecheckliste
 
+- [ ] GitHub-jobbet `Lint, types, unit, build and budgets` er grønt for release-committet.
+- [ ] Det databasebaserede E2E-job er grønt, eller en dokumenteret lokal E2E-kørsel er vedlagt, indtil de isolerede GitHub Secrets er aktiveret.
 - [ ] Preview-migrationen er gennemgået og testet to gange på en ny Neon-branch.
 - [ ] Preview bruger `BREVO_DELIVERY_MODE=sandbox`; sandbox-request og outbox-`sent`-hændelse er verificeret.
 - [ ] Production-afsenderdomæne er verificeret i Brevo.

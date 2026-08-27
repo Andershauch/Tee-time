@@ -2,6 +2,7 @@
 
 | Dato | Beslutning | Status | Konsekvens |
 | --- | --- | --- | --- |
+| 2026-08-27 | Hvert pull request og push til `master` kører en hemmelighedsfri kvalitetsport med lint, typer, enhedstests, build og performancebudgetter. Database-E2E aktiveres kun mod en særskilt testbranch via GitHub Secrets. | Besluttet | Almindelige regressioner opdages automatisk. De blokeres først før produktion, når `master` er beskyttet med et PR-/statuscheck-krav; produktionsdata og produktionskonti eksponeres aldrig for CI. |
 | 2026-08-27 | Offentlige sider bruger statisk CSP og prerendering; nonce-CSP afgrænses til login, personale og menuadmin. | Besluttet | En global nonce gjorde alle sider dynamiske og fjernede CDN-cache. Backoffice bevarer den strengeste politik, mens den offentlige app fortsat har en snæver CSP og ingen brugerdefineret HTML-rendering. |
 | 2026-08-27 | Gæst, personale og menuadmin udgives som tre PWA-profiler med separate manifest-id'er og startadresser. | Besluttet | Installerede ikoner åbner den relevante arbejdsflade på Android, iPhone og iPad uden at ændre adgangskontrollen. |
 | 2026-08-27 | Menu-readmodellen caches i 60 sekunder og invalides efter adminmutationer; checkout er altid frisk og transaktionel. | Besluttet | Reducerer Neon-latens og egress uden at stole på cache for pris, lager eller ordreaccept. |

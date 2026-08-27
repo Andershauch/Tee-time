@@ -70,7 +70,7 @@ export async function getActiveMenuFromNeon(now = new Date()): Promise<MenuReadM
 }
 
 export async function getMenuReadModel(): Promise<MenuReadModel> {
-  if (!process.env.DATABASE_URL) {
+  if (process.env.TEE_TIME_BUILD_WITH_FIXTURES === "1" || !process.env.DATABASE_URL) {
     return { categories: fixtureCategories, products: fixtureProducts, offers: fixtureOffers, hours: defaultRestaurantHours, source: "fixtures" };
   }
 

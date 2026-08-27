@@ -1,0 +1,100 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: Run database-backed browser tests
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, types, unit, build and budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      DEPLOYMENT_ENV: local
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run the complete deterministic quality gate
+        run: npm run verify
+
+  e2e:
+    name: Database-backed mobile and tablet flows
+    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.RUN_E2E == 'true' || inputs.run_e2e == true) }}
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      DEPLOYMENT_ENV: local
+      NEXT_PUBLIC_APP_URL: http://localhost:3010
+      DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+      NEON_AUTH_BASE_URL: ${{ secrets.E2E_NEON_AUTH_BASE_URL }}
+      TEST_STAFF_EMAIL: ${{ secrets.E2E_TEST_STAFF_EMAIL }}
+      TEST_STAFF_PASSWORD: ${{ secrets.E2E_TEST_STAFF_PASSWORD }}
+      TEST_ADMIN_EMAIL: ${{ secrets.E2E_TEST_ADMIN_EMAIL }}
+      TEST_ADMIN_PASSWORD: ${{ secrets.E2E_TEST_ADMIN_PASSWORD }}
+      CRON_SECRET: ${{ secrets.E2E_CRON_SECRET }}
+      BREVO_DELIVERY_MODE: disabled
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Require an isolated E2E environment
+        run: >-
+          node --input-type=module -e "const required=['DATABASE_URL','NEON_AUTH_BASE_URL','TEST_STAFF_EMAIL','TEST_STAFF_PASSWORD','TEST_ADMIN_EMAIL','TEST_ADMIN_PASSWORD','CRON_SECRET']; const missing=required.filter((name)=>!process.env[name]); if(missing.length) throw new Error('Missing E2E secrets: '+missing.join(', '));"
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify the isolated database
+        run: npm run test:db
+
+      - name: Run mobile and tablet browser flows
+        run: npm run test:e2e
+
+      - name: Upload Playwright diagnostics on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-diagnostics-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -25,6 +25,7 @@ npm run build
 ```
 
 Browsertests køres med `npm run test:e2e`, efter Playwrights Chromium-browser er installeret.
+Den samlede lokale kvalitetsport er `npm run verify`. Se [teststrategien](docs/TESTING.md) for CI, database-/browsertests, performancebudgetter og krav til nye ændringer.
 
 ## Database og lokale testkonti
 
@@ -49,6 +50,7 @@ De lokale browsertestkonti læses kun fra `.env.local`. Opret dem med `db:provis
 - [Release og rollback](docs/RELEASE.md)
 - [Teknisk audit og refactor](docs/TECHNICAL-AUDIT.md)
 - [PWA-installation og test](docs/PWA.md)
+- [Teststrategi og CI](docs/TESTING.md)
 - [Assets og licenser](docs/assets-and-licensing.md)
 
 ## Asset-URL'er
